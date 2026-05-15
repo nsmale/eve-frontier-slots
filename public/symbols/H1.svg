@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <polygon points="40,4 49,30 76,30 54,47 62,74 40,57 18,74 26,47 4,30 31,30" fill="#fbbf24" stroke="#d97706" stroke-width="2"/>
+  <text x="40" y="46" text-anchor="middle" font-family="monospace" font-size="9" font-weight="bold" fill="#78350f">STAR</text>
+</svg>
