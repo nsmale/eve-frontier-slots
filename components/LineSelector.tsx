@@ -8,24 +8,36 @@ export default function LineSelector() {
   const spinning = useSlotStore((s) => s.spinning);
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-slate-400 font-mono uppercase tracking-wider mr-1">Lines</span>
-      {([1, 2, 3, 4, 5] as const).map((n) => (
-        <button
-          key={n}
-          onClick={() => setLines(n)}
-          disabled={spinning}
-          className={[
-            "w-8 h-8 rounded text-sm font-bold font-mono transition-all border",
-            lines >= n
-              ? "bg-blue-600 border-blue-400 text-white shadow-[0_0_8px_rgba(59,130,246,0.4)]"
-              : "bg-[#111827] border-[#1e2d4a] text-slate-400 hover:border-blue-600",
-            spinning ? "cursor-not-allowed opacity-50" : "cursor-pointer",
-          ].join(" ")}
-        >
-          {n}
-        </button>
-      ))}
+    <div className="flex items-center gap-3">
+      <span className="hud-label" style={{ minWidth: 40 }}>Lines</span>
+      <div className="flex gap-1.5">
+        {([1, 2, 3, 4, 5] as const).map((n) => {
+          const active = lines >= n;
+          return (
+            <button
+              key={n}
+              onClick={() => setLines(n)}
+              disabled={spinning}
+              style={{
+                width: 34,
+                height: 34,
+                background: active ? "var(--teal)" : "transparent",
+                color: active ? "#0A0A0A" : "rgba(24,124,155,0.6)",
+                border: `1px solid ${active ? "var(--teal)" : "rgba(24,124,155,0.25)"}`,
+                fontFamily: "var(--font-mono)",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: spinning ? "not-allowed" : "pointer",
+                opacity: spinning ? 0.45 : 1,
+                transition: "all 0.15s",
+                borderRadius: 0,
+              }}
+            >
+              {n}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -16,38 +16,52 @@ export default function BetSummary({ onSpin }: Props) {
   const canSpin = balance >= totalBet && !spinning;
 
   return (
-    <div className="flex items-center gap-4 flex-wrap">
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-400 font-mono uppercase tracking-wider">Total bet</span>
-        <span className="font-mono font-bold text-blue-300 text-lg">{totalBet}</span>
+    <div className="flex items-center justify-between gap-4">
+      {/* Bet readout */}
+      <div className="flex items-center gap-6">
+        <div>
+          <p className="hud-label" style={{ marginBottom: 2 }}>Bet</p>
+          <p style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 20,
+            fontWeight: 600,
+            color: "var(--teal)",
+            letterSpacing: "0.05em",
+          }}>
+            {totalBet}<span className="hud-label" style={{ marginLeft: 5, fontSize: 9 }}>CR</span>
+          </p>
+        </div>
+        <div style={{ borderLeft: "1px solid rgba(24,124,155,0.2)", paddingLeft: 16 }}>
+          <p className="hud-label" style={{ marginBottom: 2 }}>Lines × Cr</p>
+          <p style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 13,
+            color: "rgba(181,227,216,0.5)",
+          }}>
+            {lines} × {creditsPerLine}
+          </p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-400 font-mono uppercase tracking-wider">Balance</span>
-        <span
-          className={[
-            "font-mono font-bold text-lg transition-colors",
-            balance < totalBet ? "text-red-400" : "text-slate-100",
-          ].join(" ")}
-        >
-          {balance}
-        </span>
-      </div>
-
+      {/* Spin button */}
       <motion.button
-        whileTap={{ scale: 0.95 }}
+        whileTap={{ scale: canSpin ? 0.97 : 1 }}
         onClick={onSpin}
         disabled={!canSpin}
-        className={[
-          "ml-auto px-8 py-3 rounded-lg font-bold font-mono text-lg tracking-widest uppercase transition-all border-2",
-          canSpin
-            ? "bg-blue-600 border-blue-400 text-white cursor-pointer shadow-[0_0_16px_rgba(59,130,246,0.5)] hover:bg-blue-500 hover:shadow-[0_0_24px_rgba(59,130,246,0.7)]"
-            : "bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed",
-        ].join(" ")}
+        className="btn-primary"
+        style={{
+          minWidth: 160,
+          position: "relative",
+          overflow: "hidden",
+        }}
       >
         {spinning ? (
-          <span className="flex items-center gap-2">
-            <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+          <span className="flex items-center justify-center gap-3">
+            <motion.span
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
+              style={{ display: "inline-block", width: 14, height: 14, border: "2px solid #0A0A0A", borderTopColor: "transparent", borderRadius: "50%" }}
+            />
             Spinning
           </span>
         ) : (
