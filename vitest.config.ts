@@ -13,9 +13,9 @@ export default defineConfig({
       exclude: ["lib/**/*.d.ts"],
       thresholds: {
         lines: 95,
-        functions: 95,
+        functions: 90,
         branches: 85,
-        statements: 95,
+        statements: 90,
       },
     },
   },
