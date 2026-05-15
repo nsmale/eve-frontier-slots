@@ -7,6 +7,9 @@
   --teal-dim: rgba(24, 124, 155, 0.3);
   --teal-glow: rgba(24, 124, 155, 0.5);
   --coral: #FB977C;
+  --red: #E53535;
+  --red-dim: rgba(229, 53, 53, 0.3);
+  --red-glow: rgba(229, 53, 53, 0.5);
   --white: #FFFFFF;
   --mint: #B5E3D8;
   --font-body: var(--font-inter), Inter, system-ui, sans-serif;
@@ -114,8 +117,8 @@ body {
 
 /* ─── Win animations ────────────────────────────────────────────────────── */
 @keyframes winGlow {
-  0%, 100% { box-shadow: 0 0 8px var(--teal-glow); }
-  50% { box-shadow: 0 0 24px var(--teal-glow), 0 0 48px rgba(24, 124, 155, 0.25); }
+  0%, 100% { box-shadow: 0 0 8px var(--red-glow); }
+  50% { box-shadow: 0 0 24px var(--red-glow), 0 0 48px rgba(229, 53, 53, 0.25); }
 }
 @keyframes bigWinShake {
   0%, 100% { transform: translateX(0); }
@@ -124,10 +127,11 @@ body {
   60% { transform: translateX(-3px); }
   80% { transform: translateX(3px); }
 }
+@keyframes drumRoll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-688px); }
+}
 
 .win-glow { animation: winGlow 1.2s ease-in-out infinite; }
 .big-win-shake { animation: bigWinShake 0.5s ease-in-out; }
-
-/* Keep old names for compatibility */
 .win-cell { animation: winGlow 1.2s ease-in-out infinite; }
-.big-win-shake-old { animation: bigWinShake 0.5s ease-in-out; }

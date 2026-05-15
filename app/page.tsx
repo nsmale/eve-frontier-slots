@@ -66,6 +66,7 @@ export default function Home() {
           spinning={spinning}
           activeLines={lines}
           lineWins={lastResult && !spinning ? lastResult.lineWins : []}
+          winAmount={lastResult && !spinning ? lastResult.totalPayout : 0}
           onSpinComplete={handleSpinComplete}
         />
 
