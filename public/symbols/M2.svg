@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <polygon points="40,6 68,22 68,58 40,74 12,58 12,22" fill="#ec4899" stroke="#be185d" stroke-width="3"/>
+  <text x="40" y="36" text-anchor="middle" font-family="monospace" font-size="9" font-weight="bold" fill="#fff">TRIBE</text>
+  <text x="40" y="52" text-anchor="middle" font-family="monospace" font-size="18" font-weight="bold" fill="#fff">2</text>
+</svg>

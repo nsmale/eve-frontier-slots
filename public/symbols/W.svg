@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <polygon points="40,4 72,40 40,76 8,40" fill="#1a1a1a" stroke="#6b7280" stroke-width="3"/>
+  <text x="40" y="36" text-anchor="middle" font-family="monospace" font-size="9" font-weight="bold" fill="#e5e7eb">WILD</text>
+  <text x="40" y="54" text-anchor="middle" font-family="monospace" font-size="18" font-weight="bold" fill="#fbbf24">★</text>
+</svg>
