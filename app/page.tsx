@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import PlayerHUD from "@/components/PlayerHUD";
 import ReelGrid from "@/components/ReelGrid";
 import LineSelector from "@/components/LineSelector";
 import CreditSelector from "@/components/CreditSelector";
@@ -19,74 +20,106 @@ export default function Home() {
   const lines = useSlotStore((s) => s.lines);
   const creditsPerLine = useSlotStore((s) => s.creditsPerLine);
 
-  useEffect(() => {
-    initStore();
-  }, []);
+  useEffect(() => { initStore(); }, []);
 
-  const handleSpin = useCallback(() => {
-    executeSpin();
-  }, [executeSpin]);
-
-  const handleSpinComplete = useCallback(() => {
-    setSpinning(false);
-  }, [setSpinning]);
+  const handleSpin = useCallback(() => { executeSpin(); }, [executeSpin]);
+  const handleSpinComplete = useCallback(() => { setSpinning(false); }, [setSpinning]);
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen px-4 py-8 gap-6">
-      {/* Header */}
-      <header className="w-full max-w-2xl flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xs font-mono font-bold">
-            EVE
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        padding: "0 24px 80px",
+      }}
+    >
+      {/* ── Player HUD ─────────────────────────────────────────────── */}
+      <div style={{ width: "100%", maxWidth: 780 }}>
+        <PlayerHUD />
+      </div>
+
+      {/* ── Main content ───────────────────────────────────────────── */}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 780,
+          display: "flex",
+          flexDirection: "column",
+          marginTop: 48,
+          gap: 0,
+        }}
+      >
+        <div style={{ marginBottom: 14 }}>
+          <p
+            className="heading-caps"
+            style={{ fontSize: 10, color: "rgba(24,124,155,0.45)", letterSpacing: "0.3em" }}
+          >
+            — Reel Matrix —
+          </p>
+        </div>
+
+        {/* ── Reel Grid ─────────────────────────────────────────────── */}
+        <ReelGrid
+          finalGrid={grid}
+          spinning={spinning}
+          activeLines={lines}
+          lineWins={lastResult && !spinning ? lastResult.lineWins : []}
+          onSpinComplete={handleSpinComplete}
+        />
+
+        {/* ── Controls ──────────────────────────────────────────────── */}
+        <div
+          className="hud-panel"
+          style={{
+            marginTop: 24,
+            padding: "28px 28px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 24,
+          }}
+        >
+          <div className="flex flex-wrap items-center gap-8">
+            <LineSelector />
+            <CreditSelector />
           </div>
-          <h1 className="font-mono font-bold text-slate-200 tracking-wider text-sm uppercase">
-            Frontier Slots
-          </h1>
-          <span className="text-[10px] font-mono text-slate-600 border border-slate-700 px-1.5 py-0.5 rounded">
-            Stage 1
-          </span>
-        </div>
-        <div className="text-xs font-mono text-slate-500">
-          Stage 2: LUX on Sui
-        </div>
-      </header>
 
-      {/* Reel grid */}
-      <ReelGrid
-        finalGrid={grid}
-        spinning={spinning}
-        activeLines={lines}
-        lineWins={lastResult && !spinning ? lastResult.lineWins : []}
-        onSpinComplete={handleSpinComplete}
-      />
+          <div style={{ height: 1, background: "rgba(24,124,155,0.12)" }} />
 
-      {/* Controls panel */}
-      <div className="w-full max-w-2xl flex flex-col gap-4 rounded-xl border border-[#1e2d4a] bg-[#111827] p-4">
-        <div className="flex flex-wrap gap-4 items-center">
-          <LineSelector />
-          <CreditSelector />
+          <BetSummary onSpin={handleSpin} />
+
+          <div style={{ height: 1, background: "rgba(24,124,155,0.12)" }} />
+
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <WinDisplay
+              result={lastResult}
+              creditsPerLine={creditsPerLine}
+              spinning={spinning}
+            />
+            <Paytable />
+          </div>
         </div>
 
-        <BetSummary onSpin={handleSpin} />
-
-        <div className="flex items-center justify-between flex-wrap gap-3 border-t border-[#1e2d4a] pt-3">
-          <WinDisplay
-            result={lastResult}
-            creditsPerLine={creditsPerLine}
-            spinning={spinning}
-          />
-          <Paytable />
+        {/* ── Stats ─────────────────────────────────────────────────── */}
+        <div style={{ marginTop: 20 }}>
+          <GlobalStats />
         </div>
+
+        <p
+          style={{
+            marginTop: 40,
+            textAlign: "center",
+            fontFamily: "var(--font-mono)",
+            fontSize: 10,
+            letterSpacing: "0.18em",
+            color: "rgba(181,227,216,0.12)",
+            textTransform: "uppercase",
+          }}
+        >
+          Stage 1 · Session only · Balance resets on new session
+        </p>
       </div>
-
-      {/* Stats panel */}
-      <div className="w-full max-w-2xl rounded-xl border border-[#1e2d4a] bg-[#111827] px-6 py-3">
-        <GlobalStats />
-      </div>
-
-      <p className="text-[10px] text-slate-700 font-mono">
-        Session only · Balance resets on new session
-      </p>
     </main>
   );
 }

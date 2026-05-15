@@ -27,6 +27,7 @@ interface SlotState {
   executeSpin: () => { grid: Grid; result: EvaluateResult } | null;
   setSpinning: (v: boolean) => void;
   addWinToStats: (payout: number) => void;
+  addCredits: (amount?: number) => void;
 }
 
 const STORAGE_KEY = "eve-slots-balance";
@@ -103,6 +104,12 @@ export const useSlotStore = create<SlotState>((set, get) => ({
     const newStats = { ...stats, biggestWin: Math.max(stats.biggestWin, payout) };
     saveStats(newStats);
     set({ stats: newStats });
+  },
+
+  addCredits: (amount = 10) => {
+    const newBalance = get().balance + amount;
+    saveBalance(newBalance);
+    set({ balance: newBalance });
   },
 }));
 

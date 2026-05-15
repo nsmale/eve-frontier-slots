@@ -7,26 +7,42 @@ export default function GlobalStats() {
 
   const items = [
     { label: "Spins", value: stats.spins.toLocaleString() },
-    { label: "Wagered", value: stats.wagered.toLocaleString() },
-    { label: "Won", value: stats.won.toLocaleString() },
+    { label: "Wagered", value: stats.wagered.toLocaleString() + " CR" },
+    { label: "Won", value: stats.won.toLocaleString() + " CR" },
     {
-      label: "RTP",
-      value:
-        stats.wagered > 0
-          ? `${((stats.won / stats.wagered) * 100).toFixed(1)}%`
-          : "—",
+      label: "Session RTP",
+      value: stats.wagered > 0
+        ? ((stats.won / stats.wagered) * 100).toFixed(1) + "%"
+        : "—",
     },
-    { label: "Biggest win", value: stats.biggestWin.toLocaleString() },
+    { label: "Best Win", value: stats.biggestWin > 0 ? stats.biggestWin.toLocaleString() + " CR" : "—" },
   ];
 
   return (
-    <div className="flex flex-wrap gap-4 items-center justify-center text-xs font-mono text-slate-400">
-      {items.map(({ label, value }) => (
-        <div key={label} className="flex flex-col items-center gap-0.5">
-          <span className="uppercase tracking-wider text-[10px]">{label}</span>
-          <span className="text-slate-200 font-bold text-sm">{value}</span>
-        </div>
-      ))}
+    <div
+      className="hud-panel"
+      style={{ padding: "14px 24px" }}
+    >
+      <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
+        <div style={{ width: 4, height: 4, background: "var(--teal)", borderRadius: "50%" }} />
+        <span className="hud-label">Session Stats</span>
+      </div>
+      <div className="flex gap-8 flex-wrap">
+        {items.map(({ label, value }) => (
+          <div key={label}>
+            <p className="hud-label" style={{ marginBottom: 2 }}>{label}</p>
+            <p style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 15,
+              fontWeight: 600,
+              color: "var(--white)",
+              letterSpacing: "0.04em",
+            }}>
+              {value}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
