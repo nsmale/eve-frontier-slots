@@ -4,15 +4,15 @@ import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import type { SymbolId } from "@/lib/engine/symbols";
-import { SYMBOL_IDS } from "@/lib/engine/symbols";
+import { SYMBOL_IDS, SYMBOL_ART } from "@/lib/engine/symbols";
 import { PAYLINES } from "@/lib/engine/paylines";
 import type { LineWin } from "@/lib/engine/evaluate";
 import type { Grid } from "@/lib/engine/spin";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
-const CELL = 80;
+const CELL = 72;
 const GAP = 6;
-const DRUM_W = 112;
+const DRUM_W = 94;
 const DRUM_H = CELL * 3 + GAP * 2;
 
 const REEL_STOP_DELAYS = [0, 200, 400, 600, 800];
@@ -84,7 +84,7 @@ export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, w
   }
   const hasWin = lineWins.length > 0 && !spinning;
 
-  const REEL_GAP = 16;
+  const REEL_GAP = 10;
   const overlayW = 5 * DRUM_W + 4 * REEL_GAP;
   const cx = (ri: number) => ri * (DRUM_W + REEL_GAP) + DRUM_W / 2;
   const cy = (row: number) => row * (CELL + GAP) + CELL / 2;
@@ -286,7 +286,7 @@ function ReelDrum({ symbols, isSpinning, winRows, hasWin }: DrumProps) {
           >
             {tape.map((sym, i) => (
               <div key={i} style={{ width: CELL, height: CELL, flexShrink: 0 }}>
-                <Image src={`/symbols/${sym}.svg`} alt={sym} width={CELL} height={CELL} draggable={false} />
+                <Image src={SYMBOL_ART[sym]} alt={sym} width={CELL} height={CELL} draggable={false} />
               </div>
             ))}
           </div>
@@ -323,7 +323,7 @@ function ReelDrum({ symbols, isSpinning, winRows, hasWin }: DrumProps) {
                   }}
                 >
                   <Image
-                    src={`/symbols/${sym}.svg`}
+                    src={SYMBOL_ART[sym]}
                     alt={sym}
                     width={CELL}
                     height={CELL}

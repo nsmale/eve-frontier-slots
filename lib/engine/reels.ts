@@ -1,19 +1,5 @@
 import type { SymbolId } from "./symbols";
 
-/**
- * Reel strips — 5 strips, one per reel.
- * Symbol distribution targets from SPEC §4.2:
- *   Low (S1–S4):  ~16.25% each  → 4 × 13 = 52 stops per 80
- *   Mid (M1–M3):  ~7.67% each   → 3 ×  6 = 18 stops per 80  (but ≈ 7.5%)
- *   High (H1):    ~5%            → 1 ×  4 =  4 stops per 80
- *   Wild (W):     ~3%            → 1 ×  3 =  3 stops per 80
- *   Scatter (SC): ~3%            → 1 ×  3 =  3 stops per 80
- *
- * Total = 52 + 18 + 4 + 3 + 3 = 80 stops per reel.
- * Exact RTP tuning is done via /scripts/rtp-sim.ts; strip counts here are
- * the initial reasonable distribution.
- */
-
 type Strip = SymbolId[];
 
 function buildStrip(counts: Partial<Record<SymbolId, number>>): Strip {
@@ -24,11 +10,12 @@ function buildStrip(counts: Partial<Record<SymbolId, number>>): Strip {
   return strip;
 }
 
+// Total: 18+14+10+10+7+5+5+4+4+3 = 80
 const BASE_COUNTS: Partial<Record<SymbolId, number>> = {
-  S1: 13, S2: 13, S3: 13, S4: 13,
-  M1: 6,  M2: 6,  M3: 6,
+  S1: 18, S2: 14, S3: 10,
+  M1: 10, M2: 7,  M3: 5, M4: 5,
   H1: 4,
-  W:  3,
+  W:  4,
   SC: 3,
 };
 

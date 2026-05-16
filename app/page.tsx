@@ -32,11 +32,11 @@ export default function Home() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "0 24px 80px",
+        padding: "0 16px 32px",
       }}
     >
       {/* ── Player HUD ─────────────────────────────────────────────── */}
-      <div style={{ width: "100%", maxWidth: 780 }}>
+      <div style={{ width: "100%", maxWidth: 610 }}>
         <PlayerHUD />
       </div>
 
@@ -44,10 +44,10 @@ export default function Home() {
       <div
         style={{
           width: "100%",
-          maxWidth: 780,
+          maxWidth: 610,
           display: "flex",
           flexDirection: "column",
-          marginTop: 48,
+          marginTop: 20,
           gap: 0,
         }}
       >
