@@ -62,8 +62,9 @@ export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, w
     for (let ri = 0; ri < 5; ri++) {
       const idx = ri;
       timers[idx] = setTimeout(() => {
-        const next = displayGrid.map((r, i) => i === idx ? [...finalGrid[idx]] as SymbolId[] : [...r] as SymbolId[]);
-        setDisplayGrid(next);
+        setDisplayGrid((prev) =>
+          prev.map((r, i) => (i === idx ? ([...finalGrid[idx]] as SymbolId[]) : r))
+        );
         setSpinningReels((p) => { const n = [...p]; n[idx] = false; return n; });
         completedRef.current += 1;
         if (completedRef.current === 5) onSpinComplete();
