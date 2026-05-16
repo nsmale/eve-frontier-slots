@@ -5,15 +5,16 @@ import { useSlotStore } from "@/lib/store";
 
 interface Props {
   onSpin: () => void;
+  chainPending?: boolean;
 }
 
-export default function BetSummary({ onSpin }: Props) {
+export default function BetSummary({ onSpin, chainPending = false }: Props) {
   const balance = useSlotStore((s) => s.balance);
   const lines = useSlotStore((s) => s.lines);
   const creditsPerLine = useSlotStore((s) => s.creditsPerLine);
   const spinning = useSlotStore((s) => s.spinning);
   const totalBet = lines * creditsPerLine;
-  const canSpin = balance >= totalBet && !spinning;
+  const canSpin = balance >= totalBet && !spinning && !chainPending;
 
   return (
     <div className="flex items-center justify-between gap-4">
@@ -55,7 +56,16 @@ export default function BetSummary({ onSpin }: Props) {
           overflow: "hidden",
         }}
       >
-        {spinning ? (
+        {chainPending ? (
+          <span className="flex items-center justify-center gap-3">
+            <motion.span
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+              style={{ display: "inline-block", width: 14, height: 14, border: "2px solid #0A0A0A", borderTopColor: "transparent", borderRadius: "50%" }}
+            />
+            Submitting
+          </span>
+        ) : spinning ? (
           <span className="flex items-center justify-center gap-3">
             <motion.span
               animate={{ rotate: 360 }}

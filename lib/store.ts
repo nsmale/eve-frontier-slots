@@ -18,6 +18,7 @@ interface SlotState {
   lines: 1 | 2 | 3 | 4 | 5;
   creditsPerLine: 1 | 5 | 10;
   spinning: boolean;
+  chainPending: boolean;
   grid: Grid | null;
   lastResult: EvaluateResult | null;
   stats: SessionStats;
@@ -25,6 +26,9 @@ interface SlotState {
   setLines: (lines: 1 | 2 | 3 | 4 | 5) => void;
   setCreditsPerLine: (cpl: 1 | 5 | 10) => void;
   executeSpin: () => { grid: Grid; result: EvaluateResult } | null;
+  /** Called once the chain tx resolves: sets grid + result + starts reel animation. */
+  startChainSpin: (grid: Grid, result: EvaluateResult, payout: number) => void;
+  setChainPending: (v: boolean) => void;
   setSpinning: (v: boolean) => void;
   addWinToStats: (payout: number) => void;
   addCredits: (amount?: number) => void;
@@ -68,6 +72,7 @@ export const useSlotStore = create<SlotState>((set, get) => ({
   lines: 5,
   creditsPerLine: 1,
   spinning: false,
+  chainPending: false,
   grid: null,
   lastResult: null,
   stats: { spins: 0, wagered: 0, won: 0, biggestWin: 0 },
@@ -75,6 +80,19 @@ export const useSlotStore = create<SlotState>((set, get) => ({
   setLines: (lines) => set({ lines }),
   setCreditsPerLine: (creditsPerLine) => set({ creditsPerLine }),
   setSpinning: (v) => set({ spinning: v }),
+  setChainPending: (v) => set({ chainPending: v }),
+
+  startChainSpin: (grid, result, payout) => {
+    const stats = get().stats;
+    const newStats: SessionStats = {
+      spins: stats.spins + 1,
+      wagered: stats.wagered + get().lines * get().creditsPerLine,
+      won: stats.won + payout,
+      biggestWin: Math.max(stats.biggestWin, payout),
+    };
+    saveStats(newStats);
+    set({ grid, lastResult: result, spinning: true, chainPending: false, stats: newStats });
+  },
 
   executeSpin: () => {
     const { balance, lines, creditsPerLine, spinning } = get();
