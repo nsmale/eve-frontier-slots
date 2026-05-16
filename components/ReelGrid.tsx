@@ -227,24 +227,6 @@ function ReelDrum({ symbols, isSpinning, winRows, hasWin }: DrumProps) {
 
   return (
     <div style={{ position: "relative", width: DRUM_W, height: DRUM_H, flexShrink: 0 }}>
-      {/* Spinning indicator ring */}
-      {isSpinning && (
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.0, repeat: Infinity, ease: "linear" }}
-          style={{
-            position: "absolute",
-            inset: -5,
-            borderRadius: "50%",
-            border: "2px solid transparent",
-            borderTopColor: "var(--teal)",
-            borderRightColor: "rgba(24,124,155,0.25)",
-            pointerEvents: "none",
-            zIndex: 10,
-          }}
-        />
-      )}
-
       {/* Win pulse ring */}
       {hasWin && !isSpinning && (
         <div
