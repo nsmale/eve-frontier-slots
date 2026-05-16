@@ -2,6 +2,7 @@
   "name": "eve-frontier-slots",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.0.9",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -34,5 +35,11 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.6"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["sharp", "unrs-resolver"],
+    "patchedDependencies": {
+      "@evefrontier/dapp-kit@0.1.9": "patches/@evefrontier__dapp-kit.patch"
+    }
   }
 }
