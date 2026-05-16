@@ -51,15 +51,6 @@ export default function Home() {
           gap: 0,
         }}
       >
-        <div style={{ marginBottom: 14 }}>
-          <p
-            className="heading-caps"
-            style={{ fontSize: 10, color: "rgba(24,124,155,0.45)", letterSpacing: "0.3em" }}
-          >
-            — Reel Matrix —
-          </p>
-        </div>
-
         {/* ── Reel Grid ─────────────────────────────────────────────── */}
         <ReelGrid
           finalGrid={grid}

@@ -93,7 +93,7 @@ export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, w
   return (
     <div>
       {/* Win banner above reels */}
-      <div style={{ minHeight: 52, marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ height: 60, marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {winAmount > 0 && !spinning && (
           <motion.div
             key={winAmount}
@@ -146,8 +146,7 @@ export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, w
         }}
       >
         {/* Top label bar */}
-        <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-          <span className="hud-label">Reel Matrix</span>
+        <div className="flex items-center justify-end" style={{ marginBottom: 16 }}>
           <span className="hud-label" style={{ color: hasWin ? "var(--red)" : "rgba(181,227,216,0.3)" }}>
             {hasWin ? "WIN DETECTED" : "STANDBY"}
           </span>
