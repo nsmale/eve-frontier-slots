@@ -1,4 +1,4 @@
-import { rmSync, existsSync } from "fs";
+import { rmSync, existsSync, readdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -9,7 +9,7 @@ const pnpmStore = join(root, "node_modules", ".pnpm");
 // may have left behind before the patch was applied. Turbopack can accidentally
 // resolve to these leftover directories instead of the patched one.
 if (existsSync(pnpmStore)) {
-  for (const entry of (await import("fs")).default.readdirSync(pnpmStore)) {
+  for (const entry of readdirSync(pnpmStore)) {
     if (
       entry.startsWith("@evefrontier+dapp-kit") &&
       !entry.includes("patch_hash")
