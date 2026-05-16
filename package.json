@@ -37,7 +37,7 @@
     "vitest": "^4.1.6"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["sharp", "unrs-resolver"],
+    "ignoredBuiltDependencies": ["sharp", "unrs-resolver"],
     "patchedDependencies": {
       "@evefrontier/dapp-kit@0.1.9": "patches/@evefrontier__dapp-kit.patch"
     }
