@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@evefrontier/dapp-kit': 934513f09aec73eee5aa7c1861049133df0d5af81787d551606ab1f17281b7c4
+  '@evefrontier/dapp-kit@0.1.9': 934513f09aec73eee5aa7c1861049133df0d5af81787d551606ab1f17281b7c4
 
 importers:
 

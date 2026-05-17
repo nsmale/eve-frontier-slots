@@ -1,6 +1,10 @@
 allowBuilds:
   sharp: set this to true or false
   unrs-resolver: set this to true or false
-ignoredBuiltDependencies:
+
+onlyBuiltDependencies:
   - sharp
   - unrs-resolver
+
+patchedDependencies:
+  "@evefrontier/dapp-kit@0.1.9": "patches/@evefrontier__dapp-kit.patch"
