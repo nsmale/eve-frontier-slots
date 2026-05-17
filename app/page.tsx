@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSmartObject } from "@evefrontier/dapp-kit";
 import { useWallet } from "@/lib/chain/WalletContext";
 import { queryClient } from "@/components/Providers";
 import { SuiJsonRpcClient as SuiClient, getJsonRpcFullnodeUrl as getFullnodeUrl } from "@mysten/sui/jsonRpc";
@@ -50,8 +51,10 @@ export default function Home() {
   const creditsPerLine = useSlotStore((s) => s.creditsPerLine);
 
   const { isConnected, walletAddress, character } = useWallet();
+  const { assembly } = useSmartObject();
   const searchParams = useSearchParams();
-  const ssuId = searchParams.get("ssu") ?? "";
+  // Prefer the SSU the game passed via ?itemId= (resolved by dapp-kit) over ?ssu= fallback
+  const ssuId = assembly?.id ?? searchParams.get("ssu") ?? "";
 
   useEffect(() => { initStore(); }, []);
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Transaction } from "@mysten/sui/transactions";
 import { SuiJsonRpcClient as SuiClient, getJsonRpcFullnodeUrl as getFullnodeUrl } from "@mysten/sui/jsonRpc";
+import { useSmartObject } from "@evefrontier/dapp-kit";
 import { useWallet } from "@/lib/chain/WalletContext";
 import {
   NETWORK,
@@ -39,6 +40,9 @@ interface StepStatus { authorize: StepState; setup: StepState; error: string | n
 
 export default function AdminPage() {
   const { isConnected, walletAddress, character, handleConnect } = useWallet();
+  // assembly.id is the Sui object ID of the SSU this dapp was opened from in-game
+  const { assembly } = useSmartObject();
+  const activeAssemblyId = assembly?.id ?? null;
 
   const [ssus, setSsus]           = useState<SsuOption[]>([]);
   const [ssusLoading, setSsusLoading] = useState(false);
@@ -75,13 +79,22 @@ export default function AdminPage() {
         }
       }
       setSsus(found);
-      if (found.length === 1) setSelectedSsu(found[0]);
     }).catch(() => {
       setSsus([]);
     }).finally(() => {
       setSsusLoading(false);
     });
   }, [character?.characterId]);
+
+  // Auto-select the SSU that matches the game context (assembly.id) or the only one
+  useEffect(() => {
+    if (ssus.length === 0) return;
+    if (activeAssemblyId) {
+      const match = ssus.find((s) => s.ssuId === activeAssemblyId);
+      if (match) { setSelectedSsu(match); return; }
+    }
+    if (ssus.length === 1) setSelectedSsu(ssus[0]);
+  }, [ssus, activeAssemblyId]);
 
   // ── Step 1: authorize_on_ssu ──────────────────────────────────────────────
   async function runAuthorize() {
