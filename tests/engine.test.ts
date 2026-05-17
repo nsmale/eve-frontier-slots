@@ -22,17 +22,17 @@ function solidGrid(sym: SymbolId): SymbolId[][] {
 }
 
 // ─── Paytable unit tests ──────────────────────────────────────────────────────
-// Values tuned for ~95% base-game RTP (lines + scatter).
+// Values tuned for ~88.7% base RTP → ~92.2% total with jackpot reclaim.
 
 describe("paytable", () => {
   it("getLinePay: S1 3-of-a-kind = 1",   () => expect(getLinePay("S1", 3)).toBe(1));
   it("getLinePay: S2 3-of-a-kind = 2",   () => expect(getLinePay("S2", 3)).toBe(2));
-  it("getLinePay: S3 5-of-a-kind = 55",  () => expect(getLinePay("S3", 5)).toBe(55));
+  it("getLinePay: S3 5-of-a-kind = 50",  () => expect(getLinePay("S3", 5)).toBe(50));
   it("getLinePay: M1 3-of-a-kind = 5",   () => expect(getLinePay("M1", 3)).toBe(5));
-  it("getLinePay: M2 4-of-a-kind = 55",  () => expect(getLinePay("M2", 4)).toBe(55));
-  it("getLinePay: M3 5-of-a-kind = 440", () => expect(getLinePay("M3", 5)).toBe(440));
-  it("getLinePay: H1 5-of-a-kind = 1100",() => expect(getLinePay("H1", 5)).toBe(1100));
-  it("getLinePay: W 5-of-a-kind = 2200", () => expect(getLinePay("W", 5)).toBe(2200));
+  it("getLinePay: M2 4-of-a-kind = 50",  () => expect(getLinePay("M2", 4)).toBe(50));
+  it("getLinePay: M3 5-of-a-kind = 400", () => expect(getLinePay("M3", 5)).toBe(400));
+  it("getLinePay: H1 5-of-a-kind = 1000",() => expect(getLinePay("H1", 5)).toBe(1000));
+  it("getLinePay: W 5-of-a-kind = 2000", () => expect(getLinePay("W", 5)).toBe(2000));
   it("getLinePay: W 3-of-a-kind = 0 (wild only at 5)", () => expect(getLinePay("W", 3)).toBe(0));
 
   it("getScatterPay: 1 scatter = 0",  () => expect(getScatterPay(1)).toBe(0));
@@ -63,13 +63,13 @@ describe("evaluate: basic line wins", () => {
     expect(result.lineWins[0].payout).toBe(1);
   });
 
-  it("S2 5-of-a-kind on line 2, 10 cpl → 220 credits", () => {
+  it("S2 5-of-a-kind on line 2, 10 cpl → 200 credits", () => {
     const grid = gridWithLine(1, ["S2", "S2", "S2", "S2", "S2"]);
     const result = evaluate({ grid, lines: 2, creditsPerLine: 10 });
     const win = result.lineWins.find(w => w.lineIndex === 1);
     expect(win).toBeDefined();
     expect(win!.matchCount).toBe(5);
-    expect(win!.payout).toBe(220); // 22 × 10
+    expect(win!.payout).toBe(200); // 20 × 10
   });
 
   it("M1 3-of-a-kind on line 3, 5 cpl → 25 credits", () => {
@@ -80,13 +80,13 @@ describe("evaluate: basic line wins", () => {
     expect(win!.payout).toBe(25); // 5 × 5
   });
 
-  it("H1 5-of-a-kind on line 2, 5 cpl → 5500 credits", () => {
+  it("H1 5-of-a-kind on line 2, 5 cpl → 5000 credits", () => {
     const grid = gridWithLine(1, ["H1", "H1", "H1", "H1", "H1"]);
     const result = evaluate({ grid, lines: 2, creditsPerLine: 5 });
     const win = result.lineWins.find(w => w.lineIndex === 1);
     expect(win).toBeDefined();
     expect(win!.matchCount).toBe(5);
-    expect(win!.payout).toBe(5500); // 1100 × 5
+    expect(win!.payout).toBe(5000); // 1000 × 5
   });
 
   it("no match (all different symbols) → no line wins", () => {
@@ -102,7 +102,7 @@ describe("evaluate: basic line wins", () => {
     expect(result.lineWins).toHaveLength(0);
   });
 
-  it("V-shape payline (line 4): S3×5 × 1 cpl → 55 credits", () => {
+  it("V-shape payline (line 4): S3×5 × 1 cpl → 50 credits", () => {
     // PAYLINES[3] = [0, 1, 2, 1, 0]
     const grid: SymbolId[][] = [
       ["S3", "S1", "S1"],
@@ -115,10 +115,10 @@ describe("evaluate: basic line wins", () => {
     const win = result.lineWins.find(w => w.lineIndex === 3);
     expect(win).toBeDefined();
     expect(win!.matchCount).toBe(5);
-    expect(win!.payout).toBe(55); // S3-5 × 1
+    expect(win!.payout).toBe(50); // S3-5 × 1
   });
 
-  it("inverted-V payline (line 5): M2×5 × 1 cpl → 220 credits", () => {
+  it("inverted-V payline (line 5): M2×5 × 1 cpl → 200 credits", () => {
     // PAYLINES[4] = [2, 1, 0, 1, 2]
     const grid: SymbolId[][] = [
       ["S1", "S1", "M2"],
@@ -131,7 +131,7 @@ describe("evaluate: basic line wins", () => {
     const win = result.lineWins.find(w => w.lineIndex === 4);
     expect(win).toBeDefined();
     expect(win!.matchCount).toBe(5);
-    expect(win!.payout).toBe(220); // M2-5 × 1
+    expect(win!.payout).toBe(200); // M2-5 × 1
   });
 });
 
@@ -146,34 +146,34 @@ describe("evaluate: wild substitution", () => {
     expect(result.lineWins[0].payout).toBe(1);
   });
 
-  it("S2, S2, W, S2, S2 → S2-5 × 5 cpl = 110", () => {
+  it("S2, S2, W, S2, S2 → S2-5 × 5 cpl = 100", () => {
     const grid = gridWithLine(0, ["S2", "S2", "W", "S2", "S2"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 5 });
     expect(result.lineWins[0].matchCount).toBe(5);
-    expect(result.lineWins[0].payout).toBe(110); // S2-5 (22) × 5
+    expect(result.lineWins[0].payout).toBe(100); // S2-5 (20) × 5
   });
 
-  it("M2, M2, W, M2, S1 → M2-4 × 10 cpl = 550", () => {
+  it("M2, M2, W, M2, S1 → M2-4 × 10 cpl = 500", () => {
     const grid = gridWithLine(1, ["M2", "M2", "W", "M2", "S1"]);
     const result = evaluate({ grid, lines: 2, creditsPerLine: 10 });
     const win = result.lineWins.find(w => w.lineIndex === 1);
     expect(win).toBeDefined();
     expect(win!.matchCount).toBe(4);
-    expect(win!.payout).toBe(550); // M2-4 (55) × 10
+    expect(win!.payout).toBe(500); // M2-4 (50) × 10
   });
 
-  it("H1×5 × 1 cpl = 1100", () => {
+  it("H1×5 × 1 cpl = 1000", () => {
     const grid = gridWithLine(0, ["H1", "H1", "H1", "H1", "H1"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 1 });
     expect(result.lineWins[0].matchCount).toBe(5);
-    expect(result.lineWins[0].payout).toBe(1100);
+    expect(result.lineWins[0].payout).toBe(1000);
   });
 
-  it("W×5 → 5-wild payout × 1 cpl = 2200", () => {
+  it("W×5 → 5-wild payout × 1 cpl = 2000", () => {
     const grid = gridWithLine(0, ["W", "W", "W", "W", "W"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 1 });
     expect(result.lineWins[0].matchCount).toBe(5);
-    expect(result.lineWins[0].payout).toBe(2200);
+    expect(result.lineWins[0].payout).toBe(2000);
   });
 
   it("wild does NOT substitute for scatter", () => {
@@ -182,18 +182,18 @@ describe("evaluate: wild substitution", () => {
     expect(result.lineWins).toHaveLength(0);
   });
 
-  it("W, H1, H1, S1, S1 → H1-3 × 1 cpl = 55", () => {
+  it("W, H1, H1, S1, S1 → H1-3 × 1 cpl = 50", () => {
     const grid = gridWithLine(0, ["W", "H1", "H1", "S1", "S1"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 1 });
     expect(result.lineWins[0].matchCount).toBe(3);
-    expect(result.lineWins[0].payout).toBe(55);
+    expect(result.lineWins[0].payout).toBe(50);
   });
 
-  it("W, W, H1, H1, S1 → H1-4 × 1 cpl = 275", () => {
+  it("W, W, H1, H1, S1 → H1-4 × 1 cpl = 250", () => {
     const grid = gridWithLine(0, ["W", "W", "H1", "H1", "S1"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 1 });
     expect(result.lineWins[0].matchCount).toBe(4);
-    expect(result.lineWins[0].payout).toBe(275);
+    expect(result.lineWins[0].payout).toBe(250);
   });
 
   it("3 wilds followed by S1, S1 → S1-5 (wilds sub for S1) × 1 cpl = 9", () => {
@@ -216,25 +216,25 @@ describe("evaluate: seer substitution", () => {
     expect(result.lineWins[0].payout).toBe(5);
   });
 
-  it("M3, M3, M4, S1, S1 → M3-3 × 1 cpl = 22", () => {
+  it("M3, M3, M4, S1, S1 → M3-3 × 1 cpl = 20", () => {
     const grid = gridWithLine(0, ["M3", "M3", "M4", "S1", "S1"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 1 });
     expect(result.lineWins[0].matchCount).toBe(3);
-    expect(result.lineWins[0].payout).toBe(22);
+    expect(result.lineWins[0].payout).toBe(20);
   });
 
-  it("M3, M4, M4, M4, S1 → M3-4 × 1 cpl = 110 (seer inherits highest anchor)", () => {
+  it("M3, M4, M4, M4, S1 → M3-4 × 1 cpl = 100 (seer inherits highest anchor)", () => {
     const grid = gridWithLine(0, ["M3", "M4", "M4", "M4", "S1"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 1 });
     expect(result.lineWins[0].matchCount).toBe(4);
-    expect(result.lineWins[0].payout).toBe(110);
+    expect(result.lineWins[0].payout).toBe(100);
   });
 
-  it("M4×5 (all-seer) → M1 rate × 1 cpl = 90", () => {
+  it("M4×5 (all-seer) → M1 rate × 1 cpl = 85", () => {
     const grid = gridWithLine(0, ["M4", "M4", "M4", "M4", "M4"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 1 });
     expect(result.lineWins[0].matchCount).toBe(5);
-    expect(result.lineWins[0].payout).toBe(90);
+    expect(result.lineWins[0].payout).toBe(85);
   });
 
   it("seer does NOT extend low-symbol runs", () => {
@@ -246,20 +246,20 @@ describe("evaluate: seer substitution", () => {
     expect(result.lineWins).toHaveLength(0);
   });
 
-  it("W, M4, M3, M4, W → M3-5 × 1 cpl = 440 (wild + seer both extend)", () => {
+  it("W, M4, M3, M4, W → M3-5 × 1 cpl = 400 (wild + seer both extend)", () => {
     const grid = gridWithLine(0, ["W", "M4", "M3", "M4", "W"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 1 });
     expect(result.lineWins[0].matchCount).toBe(5);
-    expect(result.lineWins[0].payout).toBe(440);
+    expect(result.lineWins[0].payout).toBe(400);
   });
 
-  it("W, W, W, M4, W → M1 rate × 1 cpl = 90 (seer extends wild run to mid)", () => {
-    // anchor=M1: W(wild)→1,W→2,W→3,M4(seer,isMid)→4,W→5. Has M1/M4 (has M4). pay(M1,5)=90
+  it("W, W, W, M4, W → M1 rate × 1 cpl = 85 (seer extends wild run to mid)", () => {
+    // anchor=M1: W(wild)→1,W→2,W→3,M4(seer,isMid)→4,W→5. Has M1/M4 (has M4). pay(M1,5)=85
     // anchor=W: W,W,W,M4(breaks)→count=3. pay(W,3)=0
     const grid = gridWithLine(0, ["W", "W", "W", "M4", "W"]);
     const result = evaluate({ grid, lines: 1, creditsPerLine: 1 });
     expect(result.lineWins[0].matchCount).toBe(5);
-    expect(result.lineWins[0].payout).toBe(90);
+    expect(result.lineWins[0].payout).toBe(85);
   });
 });
 

@@ -479,17 +479,18 @@ fun all_scatter(cells: &vector<u8>): bool {
     true
 }
 
-// Paytable tuned for ~95% base-game RTP (lines + scatter, before jackpot reclaim).
+// Paytable tuned for ~88.7% base-game RTP. With long-run jackpot reclaim
+// (200+100+50 bps = 3.5%) the total player RTP averages ~92.2%. House margin ~7.8%.
 // Must stay in sync with lib/engine/paytable.ts.
 fun line_pay(anchor: u8, count: u8): u64 {
     if      (anchor == 0) { if (count == 3) 1   else if (count == 4) 3    else 9    }   // S1
-    else if (anchor == 1) { if (count == 3) 2   else if (count == 4) 7    else 22   }   // S2
-    else if (anchor == 2) { if (count == 3) 3   else if (count == 4) 16   else 55   }   // S3
-    else if (anchor == 3) { if (count == 3) 5   else if (count == 4) 24   else 90   }   // M1
-    else if (anchor == 4) { if (count == 3) 11  else if (count == 4) 55   else 220  }   // M2
-    else if (anchor == 5) { if (count == 3) 22  else if (count == 4) 110  else 440  }   // M3
-    else if (anchor == 7) { if (count == 3) 55  else if (count == 4) 275  else 1100 }   // H1
-    else if (anchor == 8) { if (count == 5) 2200 else 0 }                                // W (5-only)
+    else if (anchor == 1) { if (count == 3) 2   else if (count == 4) 7    else 20   }   // S2
+    else if (anchor == 2) { if (count == 3) 3   else if (count == 4) 15   else 50   }   // S3
+    else if (anchor == 3) { if (count == 3) 5   else if (count == 4) 22   else 85   }   // M1
+    else if (anchor == 4) { if (count == 3) 10  else if (count == 4) 50   else 200  }   // M2
+    else if (anchor == 5) { if (count == 3) 20  else if (count == 4) 100  else 400  }   // M3
+    else if (anchor == 7) { if (count == 3) 50  else if (count == 4) 250  else 1000 }   // H1
+    else if (anchor == 8) { if (count == 5) 2000 else 0 }                                // W (5-only)
     else 0
 }
 
