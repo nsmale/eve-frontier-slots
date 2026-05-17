@@ -1,10 +1,9 @@
 [package]
 name = "eve_slots"
-version = "0.0.1"
 edition = "2024.beta"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+world = { git = "https://github.com/evefrontier/world-contracts.git", subdir = "contracts/world", rev = "f761a7f61abc770f0ef802d1fba626ed6c48a216" }
 
-[addresses]
-eve_slots = "0x0"
+[environments]
+testnet_stillness = "4c78adac"

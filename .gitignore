@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# move build artifacts
+move-contracts/**/build/
+
+# binary assets
+slots-artwork
+
 # debug
 npm-debug.log*
 yarn-debug.log*
