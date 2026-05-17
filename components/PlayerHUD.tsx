@@ -59,9 +59,9 @@ export default function PlayerHUD({ onDeposit, onWithdraw, depositWithdrawDisabl
     border:      "1px solid var(--teal-dim)",
     color:       "var(--white)",
     fontFamily:  "var(--font-mono)",
-    fontSize:    13,
-    padding:     "5px 10px",
-    width:       90,
+    fontSize:    12,
+    padding:     "4px 8px",
+    width:       72,
     textAlign:   "right",
     outline:     "none",
   };
@@ -143,12 +143,12 @@ export default function PlayerHUD({ onDeposit, onWithdraw, depositWithdrawDisabl
         </div>
       </div>
 
-      {/* Row 2: Balances + Deposit/Withdraw */}
-      <div className="flex items-center flex-wrap gap-0">
+      {/* Row 2: Balances + Fuel — single line, no wrap */}
+      <div className="flex items-center" style={{ flexWrap: "nowrap", gap: 0 }}>
 
         {/* Fuel Balance */}
-        <div style={{ borderLeft: "1px solid var(--teal-dim)", paddingLeft: 16, paddingRight: 20 }}>
-          <p className="hud-label" style={{ marginBottom: 4 }}>
+        <div style={{ borderLeft: "1px solid var(--teal-dim)", paddingLeft: 12, paddingRight: 14, flexShrink: 0 }}>
+          <p className="hud-label" style={{ marginBottom: 2 }}>
             {useChain ? "Fuel Balance" : "Player Balance"}
           </p>
           <AnimatePresence mode="wait">
@@ -158,14 +158,14 @@ export default function PlayerHUD({ onDeposit, onWithdraw, depositWithdrawDisabl
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.2 }}
               className="hud-value"
-              style={{ color: isLow ? "var(--coral)" : "var(--white)" }}
+              style={{ color: isLow ? "var(--coral)" : "var(--white)", fontSize: 18 }}
             >
               {displayBalance == null ? (
                 <span style={{ fontSize: 14, color: "var(--teal-dim)" }}>…</span>
               ) : (
                 <>
                   {displayBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  <span className="hud-label" style={{ marginLeft: 6, fontSize: 9 }}>
+                  <span className="hud-label" style={{ marginLeft: 4, fontSize: 9 }}>
                     {useChain ? "FUEL" : "CR"}
                   </span>
                 </>
@@ -175,55 +175,65 @@ export default function PlayerHUD({ onDeposit, onWithdraw, depositWithdrawDisabl
         </div>
 
         {/* Total Bet */}
-        <div style={{ borderLeft: "1px solid var(--teal-dim)", paddingLeft: 16, paddingRight: 20 }}>
-          <p className="hud-label" style={{ marginBottom: 4 }}>Total Bet</p>
+        <div style={{ borderLeft: "1px solid var(--teal-dim)", paddingLeft: 12, paddingRight: 14, flexShrink: 0 }}>
+          <p className="hud-label" style={{ marginBottom: 2 }}>Total Bet</p>
           <p className="hud-value" style={{ color: "var(--teal)", fontSize: 18 }}>
             {totalBet}
-            <span className="hud-label" style={{ marginLeft: 6, fontSize: 9 }}>
+            <span className="hud-label" style={{ marginLeft: 4, fontSize: 9 }}>
               {useChain ? "FUEL" : "CR"}
             </span>
           </p>
         </div>
 
-        {/* Fuel Deposit / Withdraw — single input section */}
+        {/* Fuel — single input + Add/Remove */}
         {showDepositWithdraw && (
-          <>
-            <div style={{ width: 1, height: 36, background: "var(--teal-dim)", marginLeft: 4, marginRight: 16, flexShrink: 0 }} />
-
-            <div style={{ borderLeft: "1px solid var(--teal-dim)", paddingLeft: 16 }}>
-              <p className="hud-label" style={{ marginBottom: 4 }}>Fuel</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input
-                  type="number"
-                  min={1}
-                  value={fuelInput}
-                  placeholder="FUEL"
-                  onFocus={() => setFuelInput("")}
-                  onChange={(e) => setFuelInput(e.target.value)}
-                  style={inputStyle}
-                  disabled={depositWithdrawDisabled || notReady}
-                />
-                <button
-                  className="btn-ghost"
-                  onClick={handleDeposit}
-                  disabled={!canDeposit}
-                  style={{ borderColor: "var(--teal)", color: "var(--teal)", fontSize: 11 }}
-                >
-                  {notReady ? "…" : "Deposit"}
-                </button>
-                <button
-                  className="btn-ghost"
-                  onClick={handleWithdraw}
-                  disabled={!canWithdraw}
-                  style={{ borderColor: "var(--coral)", color: "var(--coral)", fontSize: 11 }}
-                >
-                  {notReady ? "…" : "Withdraw"}
-                </button>
-              </div>
+          <div style={{ borderLeft: "1px solid var(--teal-dim)", paddingLeft: 12, flexShrink: 0 }}>
+            <p className="hud-label" style={{ marginBottom: 2 }}>Fuel</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <input
+                type="number"
+                min={1}
+                value={fuelInput}
+                placeholder="FUEL"
+                onFocus={() => setFuelInput("")}
+                onChange={(e) => setFuelInput(e.target.value)}
+                style={inputStyle}
+                disabled={depositWithdrawDisabled || notReady}
+              />
+              <button
+                className="btn-ghost"
+                onClick={handleDeposit}
+                disabled={!canDeposit}
+                style={{ borderColor: "var(--teal)", color: "var(--teal)", fontSize: 10, padding: "4px 10px" }}
+              >
+                {notReady ? "…" : "Add"}
+              </button>
+              <button
+                className="btn-ghost"
+                onClick={handleWithdraw}
+                disabled={!canWithdraw}
+                style={{ borderColor: "var(--coral)", color: "var(--coral)", fontSize: 10, padding: "4px 10px" }}
+              >
+                {notReady ? "…" : "Remove"}
+              </button>
             </div>
-          </>
+          </div>
         )}
       </div>
+
+      {/* Inline instructions for two-step deposit/withdraw flow */}
+      {showDepositWithdraw && (
+        <p style={{
+          marginTop: 8,
+          marginLeft: 12,
+          fontSize: 9,
+          fontFamily: "var(--font-mono)",
+          color: "rgba(181,227,216,0.4)",
+          letterSpacing: "0.05em",
+        }}>
+          Drag fuel from ship to storage unit, then click ADD. REMOVE returns fuel to the storage unit — drag back to ship to retrieve.
+        </p>
+      )}
     </div>
   );
 }

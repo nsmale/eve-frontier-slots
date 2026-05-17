@@ -21,6 +21,7 @@ import { buildDepositTransaction, buildWithdrawTransaction } from "@/lib/chain/d
 import { isChainConfigured, NETWORK } from "@/lib/chain/config";
 import { evaluate } from "@/lib/engine/evaluate";
 import { useQuery } from "@tanstack/react-query";
+import { fetchCharacterInfo } from "@/lib/chain/character";
 
 const suiClient = new SuiClient({ network: NETWORK, url: getFullnodeUrl(NETWORK) });
 
@@ -80,6 +81,15 @@ export default function Home() {
     if (insufficientTimer.current) clearTimeout(insufficientTimer.current);
     setShowInsufficientFuel(true);
     insufficientTimer.current = setTimeout(() => setShowInsufficientFuel(false), 3000);
+  }
+
+  // Deposit / withdraw error feedback (auto-dismiss after 6 s)
+  const [chainError, setChainError] = useState<string | null>(null);
+  const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function reportError(msg: string) {
+    if (errorTimer.current) clearTimeout(errorTimer.current);
+    setChainError(msg);
+    errorTimer.current = setTimeout(() => setChainError(null), 6000);
   }
 
   useEffect(() => { initStore(); }, []);
@@ -156,15 +166,20 @@ export default function Home() {
 
   const handleDeposit = useCallback(async (quantity: number) => {
     if (!character || !walletAddress) return;
+    if (!ssuId) { reportError("No SSU is active. Open the slots from inside an SSU."); return; }
     try {
+      // OwnerCap version/digest changes after every use; refetch immediately before building tx
+      const fresh = await fetchCharacterInfo(walletAddress);
+      if (!fresh) throw new Error("Could not refresh character info");
+
       const tx = buildDepositTransaction({
         playerAddress: walletAddress,
-        characterId:   character.characterId,
+        characterId:   fresh.characterId,
         ssuId,
         ownerCapRef: {
-          objectId: character.ownerCapId,
-          version:  character.ownerCapVersion,
-          digest:   character.ownerCapDigest,
+          objectId: fresh.ownerCapId,
+          version:  fresh.ownerCapVersion,
+          digest:   fresh.ownerCapDigest,
         },
         quantity,
       });
@@ -172,7 +187,9 @@ export default function Home() {
       await dAppKit.signAndExecuteTransaction({ transaction: tx });
       invalidateFuelBalance();
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error("Deposit failed:", err);
+      reportError(`Deposit failed: ${msg}. Did you drag fuel into the SSU first?`);
     }
   }, [character, walletAddress, ssuId, invalidateFuelBalance]);
 
@@ -180,6 +197,7 @@ export default function Home() {
 
   const handleWithdraw = useCallback(async (quantity: number) => {
     if (!character || !walletAddress) return;
+    if (!ssuId) { reportError("No SSU is active. Open the slots from inside an SSU."); return; }
     try {
       const tx = buildWithdrawTransaction({
         playerAddress: walletAddress,
@@ -191,7 +209,9 @@ export default function Home() {
       await dAppKit.signAndExecuteTransaction({ transaction: tx });
       invalidateFuelBalance();
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error("Withdraw failed:", err);
+      reportError(`Withdraw failed: ${msg}`);
     }
   }, [character, walletAddress, ssuId, invalidateFuelBalance]);
 
@@ -218,6 +238,16 @@ export default function Home() {
         />
       </div>
 
+      {/* ── Chain error banner ─────────────────────────────────────── */}
+      {chainError && (
+        <div style={{ width: "100%", maxWidth: 610, marginTop: 8, padding: "8px 12px",
+          background: "rgba(251,151,124,0.08)", border: "1px solid rgba(251,151,124,0.4)",
+          color: "var(--coral)", fontFamily: "var(--font-mono)", fontSize: 11,
+        }}>
+          {chainError}
+        </div>
+      )}
+
       {/* ── Main content ───────────────────────────────────────────── */}
       <div
         style={{
@@ -225,12 +255,12 @@ export default function Home() {
           maxWidth: 610,
           display: "flex",
           flexDirection: "column",
-          marginTop: 20,
+          marginTop: 12,
           gap: 0,
         }}
       >
         {/* ── Jackpot Display (becomes winner banner on win) ─────────── */}
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 10 }}>
           <JackpotDisplay winAmount={winAmount} spinning={spinning} />
         </div>
 
@@ -249,14 +279,14 @@ export default function Home() {
         <div
           className="hud-panel"
           style={{
-            marginTop: 24,
-            padding: "28px 28px",
+            marginTop: 14,
+            padding: "16px 22px",
             display: "flex",
             flexDirection: "column",
-            gap: 24,
+            gap: 12,
           }}
         >
-          <div className="flex flex-wrap items-center gap-8">
+          <div className="flex flex-wrap items-center gap-6">
             <LineSelector />
             <CreditSelector />
           </div>
@@ -278,13 +308,13 @@ export default function Home() {
         </div>
 
         {/* ── Stats ─────────────────────────────────────────────────── */}
-        <div style={{ marginTop: 20 }}>
+        <div style={{ marginTop: 12 }}>
           <GlobalStats />
         </div>
 
         <p
           style={{
-            marginTop: 40,
+            marginTop: 20,
             textAlign: "center",
             fontFamily: "var(--font-mono)",
             fontSize: 10,
