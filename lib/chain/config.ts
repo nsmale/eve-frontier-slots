@@ -1,4 +1,4 @@
-// Chain configuration for EVE Frontier Slot Terminal
+// Chain configuration for EVE Frontier Slot Terminal (fuel-based SSU extension)
 // Targets Utopia (Sui testnet) by default.
 
 export const NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK ?? "testnet") as
@@ -6,26 +6,56 @@ export const NETWORK = (process.env.NEXT_PUBLIC_SUI_NETWORK ?? "testnet") as
   | "mainnet"
   | "devnet";
 
-// EVE token coin type on Utopia testnet
-// Format: {evePackageId}::EVE::EVE
-export const EVE_COIN_TYPE =
-  process.env.NEXT_PUBLIC_EVE_COIN_TYPE ??
-  "0xf0446b93345c1118f21239d7ac58fb82d005219b2016e100f074e4d17162a465::EVE::EVE";
+// ── World contracts (Utopia testnet) ──────────────────────────────────────────
+// Source: https://docs.evefrontier.com → Tools → Resources → Package IDs — Utopia
 
-// Slot machine package ID (set after deploying move-contracts/eve_slots)
+// World package original-id — used for type references (e.g. Character object types)
+export const WORLD_PACKAGE_ID =
+  process.env.NEXT_PUBLIC_WORLD_PACKAGE_ID ??
+  "0x28b497559d65ab320d9da4613bf2498d5946b2c0ae3597ccfda3072ce127448c";
+
+// World package current published-at — used as the call target in PTBs
+// Stillness is version 1 (no upgrade), so original-id == published-at
+export const WORLD_PACKAGE_CURRENT =
+  process.env.NEXT_PUBLIC_WORLD_PACKAGE_CURRENT ??
+  "0x28b497559d65ab320d9da4613bf2498d5946b2c0ae3597ccfda3072ce127448c";
+
+export const OBJECT_REGISTRY_ID =
+  process.env.NEXT_PUBLIC_OBJECT_REGISTRY_ID ??
+  "0xc2b969a72046c47e24991d69472afb2216af9e91caf802684514f39706d7dc57";
+
+// ── Slot machine contracts (set after deploying move-contracts/eve_slots) ──────
+
+/** Package ID returned by `sui client publish` */
 export const SLOT_PACKAGE_ID =
-  process.env.NEXT_PUBLIC_SLOT_PACKAGE_ID ?? "";
+  process.env.NEXT_PUBLIC_SLOT_PACKAGE_ID ??
+  "0xd151911ac454210853fcf446cf097b7a502478dc9ca111136bf5eaa92aa37823";
 
-// SlotHouse shared object ID (set after create_house is called)
-export const SLOT_HOUSE_ID =
-  process.env.NEXT_PUBLIC_SLOT_HOUSE_ID ?? "";
+/** SlotConfig shared object ID (created during init, emitted in publish output) */
+export const SLOT_CONFIG_ID =
+  process.env.NEXT_PUBLIC_SLOT_CONFIG_ID ??
+  "0x13f73c11c973d87b7fe55033563452f05922a487bc172fcfc8bbefb5348ce8de";
 
-// Sui Random singleton — always 0x8 on all Sui networks
+/** SmartStorageUnit object ID for this slot machine */
+export const SSU_ID =
+  process.env.NEXT_PUBLIC_SSU_ID ?? "";
+
+/**
+ * In-game type_id for the fuel accepted by this machine.
+ * Find type IDs via the World API: https://world-api-utopia.uat.pub.evefrontier.com/docs
+ * Common fuels: EU-90 Fuel, SOF-80 Fuel, etc.
+ */
+export const FUEL_TYPE_ID =
+  Number(process.env.NEXT_PUBLIC_FUEL_TYPE_ID ?? "0");
+
+// ── Sui system objects ─────────────────────────────────────────────────────────
+
+/** Randomness beacon — always 0x8 on all Sui networks */
 export const SUI_RANDOM_ID = "0x8";
 
-// EVE token decimals — 9 (1 EVE = 1_000_000_000 base units), same as SUI
-export const EVE_DECIMALS = 9;
-export const EVE_UNIT = BigInt(10 ** EVE_DECIMALS);
+// ── Feature flags ─────────────────────────────────────────────────────────────
 
-// True once both contract IDs are configured
-export const isChainConfigured = Boolean(SLOT_PACKAGE_ID && SLOT_HOUSE_ID);
+/** True once all contract IDs are set — enables on-chain mode */
+export const isChainConfigured = Boolean(
+  SLOT_PACKAGE_ID && SLOT_CONFIG_ID && SSU_ID && FUEL_TYPE_ID,
+);

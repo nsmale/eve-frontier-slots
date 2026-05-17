@@ -13,13 +13,13 @@ import WinDisplay from "@/components/WinDisplay";
 import Paytable from "@/components/Paytable";
 import GlobalStats from "@/components/GlobalStats";
 import JackpotDisplay from "@/components/JackpotDisplay";
+import DepositWithdrawPanel from "@/components/DepositWithdrawPanel";
 import { useSlotStore, initStore } from "@/lib/store";
-import { fetchEveBalance } from "@/lib/chain/query";
 import { buildSpinTransaction, parseSpinResult, gridFromEvent } from "@/lib/chain/spin";
-import { isChainConfigured, NETWORK, EVE_UNIT } from "@/lib/chain/config";
+import { buildDepositTransaction, buildWithdrawTransaction } from "@/lib/chain/deposit";
+import { isChainConfigured, NETWORK } from "@/lib/chain/config";
 import { evaluate } from "@/lib/engine/evaluate";
 
-// Singleton Sui client for event fetching
 const suiClient = new SuiClient({ network: NETWORK, url: getFullnodeUrl(NETWORK) });
 
 async function fetchEventsWithRetry(digest: string, retries = 5) {
@@ -39,57 +39,73 @@ async function fetchEventsWithRetry(digest: string, retries = 5) {
 }
 
 export default function Home() {
-  const spinning = useSlotStore((s) => s.spinning);
+  const spinning     = useSlotStore((s) => s.spinning);
   const chainPending = useSlotStore((s) => s.chainPending);
-  const setSpinning = useSlotStore((s) => s.setSpinning);
+  const setSpinning     = useSlotStore((s) => s.setSpinning);
   const setChainPending = useSlotStore((s) => s.setChainPending);
-  const executeSpin = useSlotStore((s) => s.executeSpin);
-  const startChainSpin = useSlotStore((s) => s.startChainSpin);
-  const grid = useSlotStore((s) => s.grid);
+  const executeSpin     = useSlotStore((s) => s.executeSpin);
+  const startChainSpin  = useSlotStore((s) => s.startChainSpin);
+  const grid       = useSlotStore((s) => s.grid);
   const lastResult = useSlotStore((s) => s.lastResult);
-  const lines = useSlotStore((s) => s.lines);
+  const lines          = useSlotStore((s) => s.lines);
   const creditsPerLine = useSlotStore((s) => s.creditsPerLine);
 
-  const { isConnected, walletAddress } = useWallet();
+  const { isConnected, walletAddress, character } = useWallet();
 
   useEffect(() => { initStore(); }, []);
+
+  const getDAppKit = () => import("@evefrontier/dapp-kit/config").then((m) => m.dAppKit);
+
+  const getDigestFromResult = (result: unknown): string => {
+    if (result && typeof result === "object") {
+      if ("Transaction" in result && result.Transaction && typeof result.Transaction === "object" && "digest" in result.Transaction) {
+        return (result.Transaction as { digest: string }).digest;
+      }
+      if ("digest" in result) return (result as { digest: string }).digest;
+    }
+    throw new Error("Could not extract digest from transaction result");
+  };
+
+  const invalidateFuelBalance = useCallback(() => {
+    if (character) {
+      queryClient.invalidateQueries({ queryKey: ["fuelBalance", character.characterId] });
+    }
+    queryClient.invalidateQueries({ queryKey: ["jackpots"] });
+  }, [character]);
+
+  // ── Spin ────────────────────────────────────────────────────────────────
 
   const handleSpin = useCallback(async () => {
     if (spinning || chainPending) return;
 
-    const useChain = isChainConfigured && isConnected && !!walletAddress;
+    const useChain = isChainConfigured && isConnected && !!walletAddress && !!character;
 
     if (useChain) {
       setChainPending(true);
       try {
-        const eveBal = await fetchEveBalance(walletAddress!);
         const tx = buildSpinTransaction({
-          playerAddress: walletAddress!,
-          eveCoins: eveBal.coins,
+          playerAddress:  walletAddress!,
+          characterId:    character!.characterId,
           lines,
           creditsPerLine,
         });
 
-        const { dAppKit } = await import("@evefrontier/dapp-kit/config");
+        const dAppKit = await getDAppKit();
         const result = await dAppKit.signAndExecuteTransaction({ transaction: tx });
-        // TransactionResultWithEffects is a tagged union; digest lives under .Transaction
-        const txData = "Transaction" in result ? result.Transaction : undefined;
-        const digest: string = (txData as { digest: string } | undefined)?.digest ?? (result as unknown as { digest: string }).digest;
+        const digest = getDigestFromResult(result);
         const events = await fetchEventsWithRetry(digest);
         const spinEvent = parseSpinResult(events as { type: string; parsedJson?: unknown }[]);
 
         if (!spinEvent) throw new Error("SpinResult event not found in tx");
 
         const finalGrid = gridFromEvent(spinEvent.grid);
-        const totalPayoutLux = Number(BigInt(spinEvent.total_payout) / EVE_UNIT);
+        const totalPayout = Number(spinEvent.total_payout);
 
-        // Re-evaluate locally for lineWin highlighting; use chain total as authoritative payout
         const localEval = evaluate({ grid: finalGrid, lines, creditsPerLine });
-        const chainResult = { ...localEval, totalPayout: totalPayoutLux };
+        const chainResult = { ...localEval, totalPayout };
 
-        startChainSpin(finalGrid, chainResult, totalPayoutLux);
-        queryClient.invalidateQueries({ queryKey: ["eveBalance", walletAddress] });
-        queryClient.invalidateQueries({ queryKey: ["jackpots"] });
+        startChainSpin(finalGrid, chainResult, totalPayout);
+        invalidateFuelBalance();
       } catch (err) {
         console.error("Chain spin failed:", err);
         setChainPending(false);
@@ -97,8 +113,49 @@ export default function Home() {
     } else {
       executeSpin();
     }
-  }, [spinning, chainPending, isConnected, walletAddress, lines, creditsPerLine,
-      setChainPending, startChainSpin, executeSpin, queryClient]);
+  }, [spinning, chainPending, isConnected, walletAddress, character, lines, creditsPerLine,
+      setChainPending, startChainSpin, executeSpin, invalidateFuelBalance]);
+
+  // ── Deposit ─────────────────────────────────────────────────────────────
+
+  const handleDeposit = useCallback(async (quantity: number) => {
+    if (!character || !walletAddress) return;
+    try {
+      const tx = buildDepositTransaction({
+        playerAddress: walletAddress,
+        characterId:   character.characterId,
+        ownerCapRef: {
+          objectId: character.ownerCapId,
+          version:  character.ownerCapVersion,
+          digest:   character.ownerCapDigest,
+        },
+        quantity,
+      });
+      const dAppKit = await getDAppKit();
+      await dAppKit.signAndExecuteTransaction({ transaction: tx });
+      invalidateFuelBalance();
+    } catch (err) {
+      console.error("Deposit failed:", err);
+    }
+  }, [character, walletAddress, invalidateFuelBalance]);
+
+  // ── Withdraw ────────────────────────────────────────────────────────────
+
+  const handleWithdraw = useCallback(async (quantity: number) => {
+    if (!character || !walletAddress) return;
+    try {
+      const tx = buildWithdrawTransaction({
+        playerAddress: walletAddress,
+        characterId:   character.characterId,
+        quantity,
+      });
+      const dAppKit = await getDAppKit();
+      await dAppKit.signAndExecuteTransaction({ transaction: tx });
+      invalidateFuelBalance();
+    } catch (err) {
+      console.error("Withdraw failed:", err);
+    }
+  }, [character, walletAddress, invalidateFuelBalance]);
 
   const handleSpinComplete = useCallback(() => { setSpinning(false); }, [setSpinning]);
 
@@ -176,6 +233,13 @@ export default function Home() {
             <Paytable />
           </div>
         </div>
+
+        {/* ── Deposit / Withdraw ────────────────────────────────────── */}
+        <DepositWithdrawPanel
+          onDeposit={handleDeposit}
+          onWithdraw={handleWithdraw}
+          disabled={spinning || chainPending}
+        />
 
         {/* ── Stats ─────────────────────────────────────────────────── */}
         <div style={{ marginTop: 20 }}>

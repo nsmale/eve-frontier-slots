@@ -1,20 +1,23 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
+import type { CharacterInfo } from "./character";
 
 export interface WalletState {
-  isConnected: boolean;
-  walletAddress: string | null;
-  hasEveVault: boolean;
-  handleConnect: () => void;
+  isConnected:    boolean;
+  walletAddress:  string | null;
+  character:      CharacterInfo | null;
+  isLoadingChar:  boolean;
+  handleConnect:    () => void;
   handleDisconnect: () => void;
 }
 
 const defaultState: WalletState = {
-  isConnected: false,
-  walletAddress: null,
-  hasEveVault: false,
-  handleConnect: () => {},
+  isConnected:    false,
+  walletAddress:  null,
+  character:      null,
+  isLoadingChar:  false,
+  handleConnect:    () => {},
   handleDisconnect: () => {},
 };
 

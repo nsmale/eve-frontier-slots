@@ -2,13 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchJackpotBalances } from "@/lib/chain/query";
+import { fetchJackpotPools } from "@/lib/chain/query";
 import { isChainConfigured } from "@/lib/chain/config";
 
 export default function JackpotDisplay() {
   const { data } = useQuery({
     queryKey: ["jackpots"],
-    queryFn: fetchJackpotBalances,
+    queryFn: fetchJackpotPools,
     enabled: isChainConfigured,
     refetchInterval: 12_000,
     staleTime: 10_000,
@@ -83,7 +83,7 @@ export default function JackpotDisplay() {
               letterSpacing: "0.15em",
             }}
           >
-            LUX
+            FUEL
           </span>
         </div>
       ))}

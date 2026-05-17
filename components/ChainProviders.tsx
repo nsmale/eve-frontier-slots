@@ -3,18 +3,36 @@
 // Loaded with ssr:false — @evefrontier/dapp-kit's import.meta.env access never runs on the server.
 
 import { EveFrontierProvider, useConnection } from "@evefrontier/dapp-kit";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { WalletProvider, type WalletState } from "@/lib/chain/WalletContext";
+import { fetchCharacterInfo, type CharacterInfo } from "@/lib/chain/character";
 import { queryClient } from "./Providers";
 
 function WalletBridge({ children }: { children: ReactNode }) {
-  const { isConnected, walletAddress, hasEveVault, handleConnect, handleDisconnect } =
+  const { isConnected, walletAddress, handleConnect, handleDisconnect } =
     useConnection();
+
+  const [character, setCharacter] = useState<CharacterInfo | null>(null);
+  const [isLoadingChar, setIsLoadingChar] = useState(false);
+
+  useEffect(() => {
+    if (!isConnected || !walletAddress) {
+      setCharacter(null);
+      return;
+    }
+    setIsLoadingChar(true);
+    fetchCharacterInfo(walletAddress)
+      .then(setCharacter)
+      .catch(() => setCharacter(null))
+      .finally(() => setIsLoadingChar(false));
+  }, [isConnected, walletAddress]);
 
   const value: WalletState = {
     isConnected,
     walletAddress: walletAddress ?? null,
-    hasEveVault,
+    character,
+    isLoadingChar,
     handleConnect,
     handleDisconnect,
   };

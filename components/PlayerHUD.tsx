@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "@/lib/chain/WalletContext";
 import { useSlotStore } from "@/lib/store";
-import { fetchEveBalance } from "@/lib/chain/query";
+import { fetchPlayerFuelBalance } from "@/lib/chain/query";
 import { isChainConfigured } from "@/lib/chain/config";
 
 function abbrev(addr: string) {
@@ -12,18 +12,19 @@ function abbrev(addr: string) {
 }
 
 export default function PlayerHUD() {
-  const { isConnected, walletAddress, hasEveVault, handleConnect, handleDisconnect } = useWallet();
+  const { isConnected, walletAddress, character, isLoadingChar, handleConnect, handleDisconnect } =
+    useWallet();
 
-  // Chain balance (when connected + configured)
-  const { data: eveBal, isLoading: balLoading } = useQuery({
-    queryKey: ["eveBalance", walletAddress],
-    queryFn: () => fetchEveBalance(walletAddress!),
-    enabled: isChainConfigured && isConnected && !!walletAddress,
+  const useChain = isChainConfigured && isConnected;
+
+  const { data: fuelBalance, isLoading: balLoading } = useQuery({
+    queryKey: ["fuelBalance", character?.characterId],
+    queryFn: () => fetchPlayerFuelBalance(character!.characterId),
+    enabled: useChain && !!character,
     refetchInterval: 15_000,
     staleTime: 10_000,
   });
 
-  // Local balance (offline mode)
   const localBalance = useSlotStore((s) => s.balance);
   const lines = useSlotStore((s) => s.lines);
   const creditsPerLine = useSlotStore((s) => s.creditsPerLine);
@@ -31,12 +32,9 @@ export default function PlayerHUD() {
   const addCredits = useSlotStore((s) => s.addCredits);
 
   const totalBet = lines * creditsPerLine;
-  const useChain = isChainConfigured && isConnected;
 
-  const displayBalance = useChain
-    ? (balLoading ? null : (eveBal?.display ?? 0))
-    : localBalance;
-
+  const isLoadingBalance = useChain && (isLoadingChar || balLoading);
+  const displayBalance = useChain ? (isLoadingBalance ? null : (fuelBalance ?? 0)) : localBalance;
   const isLow = !useChain && localBalance < 50;
 
   return (
@@ -66,7 +64,7 @@ export default function PlayerHUD() {
           {/* Player Balance */}
           <div style={{ borderLeft: "1px solid var(--teal-dim)", paddingLeft: 20 }}>
             <p className="hud-label" style={{ marginBottom: 4 }}>
-              {useChain ? "LUX Balance" : "Player Balance"}
+              {useChain ? "Fuel Balance" : "Player Balance"}
             </p>
             <AnimatePresence mode="wait">
               <motion.p
@@ -81,9 +79,9 @@ export default function PlayerHUD() {
                   <span style={{ fontSize: 14, color: "var(--teal-dim)" }}>…</span>
                 ) : (
                   <>
-                    {displayBalance.toLocaleString(undefined, { maximumFractionDigits: useChain ? 2 : 0 })}
+                    {displayBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     <span className="hud-label" style={{ marginLeft: 6, fontSize: 9 }}>
-                      {useChain ? "LUX" : "CR"}
+                      {useChain ? "FUEL" : "CR"}
                     </span>
                   </>
                 )}
@@ -97,15 +95,17 @@ export default function PlayerHUD() {
             <p className="hud-value" style={{ color: "var(--teal)", fontSize: 18 }}>
               {totalBet}
               <span className="hud-label" style={{ marginLeft: 6, fontSize: 9 }}>
-                {useChain ? "LUX" : "CR"}
+                {useChain ? "FUEL" : "CR"}
               </span>
             </p>
           </div>
 
-          {/* Wallet / Add Credits */}
+          {/* Wallet controls */}
           {useChain ? (
             <div style={{ borderLeft: "1px solid var(--teal-dim)", paddingLeft: 20, display: "flex", flexDirection: "column", gap: 4 }}>
-              <p className="hud-label" style={{ fontSize: 9 }}>{abbrev(walletAddress!)}</p>
+              <p className="hud-label" style={{ fontSize: 9 }}>
+                {character ? abbrev(character.characterId) : abbrev(walletAddress!)}
+              </p>
               <button
                 className="btn-ghost"
                 onClick={handleDisconnect}
@@ -117,18 +117,14 @@ export default function PlayerHUD() {
             </div>
           ) : (
             <>
-              {hasEveVault ? (
+              {isConnected ? (
                 <button
                   className="btn-ghost"
                   onClick={handleConnect}
                   disabled={spinning}
-                  style={{
-                    borderColor: "var(--teal)",
-                    color: "var(--teal)",
-                    opacity: spinning ? 0.4 : 1,
-                  }}
+                  style={{ borderColor: "var(--teal)", color: "var(--teal)", opacity: spinning ? 0.4 : 1 }}
                 >
-                  Connect Vault
+                  Connect Wallet
                 </button>
               ) : (
                 <button
