@@ -57,10 +57,24 @@ export default function Home() {
   const localBalance   = useSlotStore((s) => s.balance);
 
   const { isConnected, walletAddress, character } = useWallet();
-  const { assembly } = useSmartObject();
+  const { assembly, loading: assemblyLoading, error: assemblyError } = useSmartObject();
   const searchParams = useSearchParams();
   // Prefer the SSU the game passed via ?itemId= (resolved by dapp-kit) over ?ssu= fallback
   const ssuId = assembly?.id ?? searchParams.get("ssu") ?? "";
+
+  // One-time debug log to help diagnose missing-SSU issues from inside the game panel
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = Object.fromEntries(new URLSearchParams(window.location.search));
+    console.log("[slots] page mount:", {
+      url: window.location.href,
+      params,
+      assemblyId: assembly?.id ?? null,
+      assemblyLoading,
+      assemblyError,
+      ssuIdResolved: ssuId,
+    });
+  }, [assembly?.id, assemblyLoading, assemblyError, ssuId]);
 
   const useChainMode = isChainConfigured && isConnected;
 
@@ -166,7 +180,15 @@ export default function Home() {
 
   const handleDeposit = useCallback(async (quantity: number) => {
     if (!character || !walletAddress) return;
-    if (!ssuId) { reportError("No SSU is active. Open the slots from inside an SSU."); return; }
+    if (!ssuId) {
+      const reason = assemblyLoading
+        ? "Still loading SSU from game context — try again in a moment."
+        : assemblyError
+        ? `Game did not resolve SSU: ${assemblyError}`
+        : "No SSU is active. Open the slots from inside an SSU.";
+      reportError(reason);
+      return;
+    }
     try {
       // OwnerCap version/digest changes after every use; refetch immediately before building tx
       const fresh = await fetchCharacterInfo(walletAddress);
@@ -191,13 +213,21 @@ export default function Home() {
       console.error("Deposit failed:", err);
       reportError(`Deposit failed: ${msg}. Did you drag fuel into the SSU first?`);
     }
-  }, [character, walletAddress, ssuId, invalidateFuelBalance]);
+  }, [character, walletAddress, ssuId, assemblyLoading, assemblyError, invalidateFuelBalance]);
 
   // ── Withdraw ────────────────────────────────────────────────────────────
 
   const handleWithdraw = useCallback(async (quantity: number) => {
     if (!character || !walletAddress) return;
-    if (!ssuId) { reportError("No SSU is active. Open the slots from inside an SSU."); return; }
+    if (!ssuId) {
+      const reason = assemblyLoading
+        ? "Still loading SSU from game context — try again in a moment."
+        : assemblyError
+        ? `Game did not resolve SSU: ${assemblyError}`
+        : "No SSU is active. Open the slots from inside an SSU.";
+      reportError(reason);
+      return;
+    }
     try {
       const tx = buildWithdrawTransaction({
         playerAddress: walletAddress,
@@ -213,7 +243,7 @@ export default function Home() {
       console.error("Withdraw failed:", err);
       reportError(`Withdraw failed: ${msg}`);
     }
-  }, [character, walletAddress, ssuId, invalidateFuelBalance]);
+  }, [character, walletAddress, ssuId, assemblyLoading, assemblyError, invalidateFuelBalance]);
 
   const handleSpinComplete = useCallback(() => { setSpinning(false); }, [setSpinning]);
 
@@ -237,6 +267,20 @@ export default function Home() {
           depositWithdrawDisabled={spinning || chainPending}
         />
       </div>
+
+      {/* ── SSU status (only shown when something's not right) ─────── */}
+      {isChainConfigured && isConnected && !ssuId && (
+        <div style={{ width: "100%", maxWidth: 610, marginTop: 8, padding: "8px 12px",
+          background: "rgba(229,53,53,0.06)", border: "1px solid rgba(229,53,53,0.35)",
+          color: "var(--red)", fontFamily: "var(--font-mono)", fontSize: 11,
+        }}>
+          {assemblyLoading
+            ? "Resolving SSU from game context…"
+            : assemblyError
+            ? `Could not load SSU from game: ${assemblyError}`
+            : "No SSU detected. The slots must be opened from inside a configured SSU (game passes the SSU's item ID in the URL)."}
+        </div>
+      )}
 
       {/* ── Chain error banner ─────────────────────────────────────── */}
       {chainError && (
