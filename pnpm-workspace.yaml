@@ -7,4 +7,4 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 patchedDependencies:
-  "@evefrontier/dapp-kit@0.1.9": "patches/@evefrontier__dapp-kit.patch"
+  "@evefrontier/dapp-kit@0.1.9": "patches/@evefrontier__dapp-kit@0.1.9.patch"

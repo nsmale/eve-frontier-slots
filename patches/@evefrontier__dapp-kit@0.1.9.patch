@@ -1,13 +1,14 @@
 diff --git a/providers/SmartObjectProvider.tsx b/providers/SmartObjectProvider.tsx
+index 9d0114250ebba01a5e22fd9520beca8a40177251..75dfee2b5ac4db132bad0909ac21827fc0e103fc 100644
 --- a/providers/SmartObjectProvider.tsx
 +++ b/providers/SmartObjectProvider.tsx
-@@ -193,7 +193,7 @@
+@@ -193,7 +193,7 @@ const SmartObjectProvider = ({ children }: { children: ReactNode }) => {
        queryParams.get(QueryParams.TENANT)?.trim() || DEFAULT_TENANT;
-
+ 
      // Check if an object ID exists in the .env file
 -    const envObjectId = import.meta.env.VITE_OBJECT_ID;
 +    const envObjectId = (typeof import.meta !== "undefined" ? import.meta.env?.VITE_OBJECT_ID : undefined);
-
+ 
      if (envObjectId) {
        log.info(
 diff --git a/utils/constants.ts b/utils/constants.ts
@@ -28,7 +29,7 @@ index bb59f44acfb2428b76c4db144a1aeea77314fc59..12d6a8193c4f472baa8066ce2365cc5f
 --- a/utils/logger.ts
 +++ b/utils/logger.ts
 @@ -61,8 +61,8 @@ export function resolveLogLevelFromEnv(
-
+ 
  const resolveEnvLogLevel = (): LogLevel => {
    return resolveLogLevelFromEnv({
 -    viteLogLevel: import.meta.env.VITE_LOG_LEVEL as string | undefined,
@@ -37,3 +38,4 @@ index bb59f44acfb2428b76c4db144a1aeea77314fc59..12d6a8193c4f472baa8066ce2365cc5f
 +    viteMode: (typeof import.meta !== "undefined" && import.meta.env?.MODE) as string | undefined,
    });
  };
+ 
