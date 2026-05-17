@@ -13,7 +13,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import {
   FUEL_TYPE_ID,
   SLOT_CONFIG_ID,
-  SLOT_PACKAGE_ID,
+  SLOT_PACKAGE_CURRENT,
   WORLD_PACKAGE_ID,
   WORLD_PACKAGE_CURRENT,
 } from "./config";
@@ -67,7 +67,7 @@ export function buildDepositTransaction({
 
   // Step 3: deposit into house pool, credit player balance
   tx.moveCall({
-    target: `${SLOT_PACKAGE_ID}::slots::accept_deposit`,
+    target: `${SLOT_PACKAGE_CURRENT}::slots::accept_deposit`,
     arguments: [
       tx.object(ssuId),
       tx.object(characterId),
@@ -109,7 +109,7 @@ export function buildWithdrawTransaction({
   tx.setSender(playerAddress);
 
   tx.moveCall({
-    target: `${SLOT_PACKAGE_ID}::slots::withdraw_fuel`,
+    target: `${SLOT_PACKAGE_CURRENT}::slots::withdraw_fuel`,
     arguments: [
       tx.object(ssuId),
       tx.object(characterId),

@@ -10,6 +10,7 @@ import {
   WORLD_PACKAGE_ID,
   WORLD_PACKAGE_CURRENT,
   SLOT_PACKAGE_ID,
+  SLOT_PACKAGE_CURRENT,
   SLOT_CONFIG_ID,
   FUEL_TYPE_ID,
 } from "@/lib/chain/config";
@@ -149,7 +150,7 @@ export default function AdminPage() {
       });
 
       tx.moveCall({
-        target: `${SLOT_PACKAGE_ID}::slots::authorize_on_ssu`,
+        target: `${SLOT_PACKAGE_CURRENT}::slots::authorize_on_ssu`,
         arguments: [tx.object(selectedSsu.ssuId), ssuOwnerCap],
       });
 
@@ -180,7 +181,7 @@ export default function AdminPage() {
       const dAppKit = await getDAppKit();
       const tx = new Transaction();
       tx.moveCall({
-        target: `${SLOT_PACKAGE_ID}::slots::setup`,
+        target: `${SLOT_PACKAGE_CURRENT}::slots::setup`,
         arguments: [tx.object(ADMIN_CAP_ID), tx.object(SLOT_CONFIG_ID), tx.pure.u64(typeId)],
       });
 

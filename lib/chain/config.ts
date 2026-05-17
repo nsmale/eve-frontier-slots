@@ -26,10 +26,16 @@ export const OBJECT_REGISTRY_ID =
 
 // ── Slot machine contracts (set after deploying move-contracts/eve_slots) ──────
 
-/** Package ID returned by `sui client publish` */
+/** Slots package original-id — used for type references */
 export const SLOT_PACKAGE_ID =
   process.env.NEXT_PUBLIC_SLOT_PACKAGE_ID ??
   "0xd151911ac454210853fcf446cf097b7a502478dc9ca111136bf5eaa92aa37823";
+
+/** Slots package current published-at — used as call target in PTBs
+ *  v2 (2026-05-17): rebalanced paytable for 92% RTP */
+export const SLOT_PACKAGE_CURRENT =
+  process.env.NEXT_PUBLIC_SLOT_PACKAGE_CURRENT ??
+  "0x851de0ffb0374eaecc797825fef5545b595cd258f457900fcf98b468d762491a";
 
 /** SlotConfig shared object ID (created during init, emitted in publish output) */
 export const SLOT_CONFIG_ID =

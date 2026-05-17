@@ -3,7 +3,7 @@
 // sui::random's re-roll prevention requirement.
 
 import { Transaction } from "@mysten/sui/transactions";
-import { SLOT_CONFIG_ID, SLOT_PACKAGE_ID, SUI_RANDOM_ID } from "./config";
+import { SLOT_CONFIG_ID, SLOT_PACKAGE_CURRENT, SUI_RANDOM_ID } from "./config";
 import type { SymbolId } from "@/lib/engine/symbols";
 import type { Grid } from "@/lib/engine/spin";
 
@@ -64,7 +64,7 @@ export function buildSpinTransaction({
   tx.setSender(playerAddress);
 
   tx.moveCall({
-    target: `${SLOT_PACKAGE_ID}::slots::spin`,
+    target: `${SLOT_PACKAGE_CURRENT}::slots::spin`,
     arguments: [
       tx.object(characterId),
       tx.object(SLOT_CONFIG_ID),
