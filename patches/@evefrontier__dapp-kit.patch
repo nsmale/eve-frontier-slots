@@ -1,0 +1,28 @@
+diff --git a/utils/constants.ts b/utils/constants.ts
+index 17b3d6981b01e2666060739d57ece5532f84fdbc..627f2b86c0fc8bb051d0e9053d44537113771954 100644
+--- a/utils/constants.ts
++++ b/utils/constants.ts
+@@ -10,7 +10,7 @@ import { SuiGraphqlNetwork } from "../types";
+  * @throws {Error} If the environment variable is not set
+  */
+ function getEnvVar(name: string): string {
+-  const value = import.meta.env[name];
++  const value = (typeof import.meta !== "undefined" ? import.meta.env?.[name] : undefined);
+   if (!value) {
+     throw new Error(
+       `Missing required environment variable: ${name}. ` +
+diff --git a/utils/logger.ts b/utils/logger.ts
+index bb59f44acfb2428b76c4db144a1aeea77314fc59..12d6a8193c4f472baa8066ce2365cc5f69d6197b 100644
+--- a/utils/logger.ts
++++ b/utils/logger.ts
+@@ -61,8 +61,8 @@ export function resolveLogLevelFromEnv(
+ 
+ const resolveEnvLogLevel = (): LogLevel => {
+   return resolveLogLevelFromEnv({
+-    viteLogLevel: import.meta.env.VITE_LOG_LEVEL as string | undefined,
+-    viteMode: import.meta.env.MODE as string | undefined,
++    viteLogLevel: (typeof import.meta !== "undefined" && import.meta.env?.VITE_LOG_LEVEL) as string | undefined,
++    viteMode: (typeof import.meta !== "undefined" && import.meta.env?.MODE) as string | undefined,
+   });
+ };
+ 
