@@ -8,9 +8,6 @@ import { useSlotStore } from "@/lib/store";
 import { fetchPlayerFuelBalance } from "@/lib/chain/query";
 import { isChainConfigured } from "@/lib/chain/config";
 
-const STEP = 100;
-const MIN  = 100;
-
 function abbrev(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
@@ -50,19 +47,37 @@ export default function PlayerHUD({ onDeposit, onWithdraw, depositWithdrawDisabl
   const showDepositWithdraw = isChainConfigured && isConnected && onDeposit && onWithdraw;
   const notReady = isLoadingChar || !character;
 
-  const [depositQty,  setDepositQty]  = useState(MIN);
-  const [withdrawQty, setWithdrawQty] = useState(MIN);
+  const [fuelInput, setFuelInput] = useState("");
+
+  const fuelQty = Math.max(0, Number(fuelInput) || 0);
+  const canDeposit  = !depositWithdrawDisabled && !notReady && fuelQty > 0;
+  const maxWithdraw = typeof displayBalance === "number" ? displayBalance : 0;
+  const canWithdraw = !depositWithdrawDisabled && !notReady && fuelQty > 0;
 
   const inputStyle: React.CSSProperties = {
     background:  "rgba(0,0,0,0.6)",
     border:      "1px solid var(--teal-dim)",
     color:       "var(--white)",
     fontFamily:  "var(--font-mono)",
-    fontSize:    12,
-    padding:     "4px 8px",
-    width:       76,
+    fontSize:    13,
+    padding:     "5px 10px",
+    width:       90,
     textAlign:   "right",
+    outline:     "none",
   };
+
+  function handleWithdraw() {
+    const safe = Math.min(fuelQty, maxWithdraw);
+    if (safe <= 0) return;
+    onWithdraw!(safe);
+    setFuelInput("");
+  }
+
+  function handleDeposit() {
+    if (fuelQty <= 0) return;
+    onDeposit!(fuelQty);
+    setFuelInput("");
+  }
 
   return (
     <div className="hud-panel w-full" style={{ padding: "16px 24px" }}>
@@ -170,55 +185,41 @@ export default function PlayerHUD({ onDeposit, onWithdraw, depositWithdrawDisabl
           </p>
         </div>
 
-        {/* Deposit / Withdraw — inline, only when chain is connected */}
+        {/* Fuel Deposit / Withdraw — single input section */}
         {showDepositWithdraw && (
           <>
-            <div style={{ width: 1, height: 36, background: "var(--teal-dim)", marginRight: 16 }} />
+            <div style={{ width: 1, height: 36, background: "var(--teal-dim)", marginLeft: 4, marginRight: 16, flexShrink: 0 }} />
 
-            {/* Deposit */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginRight: 12 }}>
-              <span className="hud-label" style={{ fontSize: 10 }}>Deposit</span>
-              <input
-                type="number"
-                min={MIN}
-                step={STEP}
-                value={depositQty}
-                onChange={(e) => setDepositQty(Math.max(MIN, Number(e.target.value)))}
-                style={inputStyle}
-                disabled={depositWithdrawDisabled || notReady}
-              />
-              <span className="hud-label" style={{ fontSize: 9 }}>FUEL</span>
-              <button
-                className="btn-ghost"
-                onClick={() => onDeposit!(depositQty)}
-                disabled={depositWithdrawDisabled || notReady || depositQty < MIN}
-                style={{ borderColor: "var(--teal)", color: "var(--teal)", fontSize: 11 }}
-              >
-                {notReady ? "…" : "Deposit"}
-              </button>
-            </div>
-
-            {/* Withdraw */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span className="hud-label" style={{ fontSize: 10 }}>Withdraw</span>
-              <input
-                type="number"
-                min={MIN}
-                step={STEP}
-                value={withdrawQty}
-                onChange={(e) => setWithdrawQty(Math.max(MIN, Number(e.target.value)))}
-                style={inputStyle}
-                disabled={depositWithdrawDisabled || notReady}
-              />
-              <span className="hud-label" style={{ fontSize: 9 }}>FUEL</span>
-              <button
-                className="btn-ghost"
-                onClick={() => onWithdraw!(withdrawQty)}
-                disabled={depositWithdrawDisabled || notReady || withdrawQty < MIN}
-                style={{ borderColor: "var(--coral)", color: "var(--coral)", fontSize: 11 }}
-              >
-                {notReady ? "…" : "Withdraw"}
-              </button>
+            <div style={{ borderLeft: "1px solid var(--teal-dim)", paddingLeft: 16 }}>
+              <p className="hud-label" style={{ marginBottom: 4 }}>Fuel</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="number"
+                  min={1}
+                  value={fuelInput}
+                  placeholder="FUEL"
+                  onFocus={() => setFuelInput("")}
+                  onChange={(e) => setFuelInput(e.target.value)}
+                  style={inputStyle}
+                  disabled={depositWithdrawDisabled || notReady}
+                />
+                <button
+                  className="btn-ghost"
+                  onClick={handleDeposit}
+                  disabled={!canDeposit}
+                  style={{ borderColor: "var(--teal)", color: "var(--teal)", fontSize: 11 }}
+                >
+                  {notReady ? "…" : "Deposit"}
+                </button>
+                <button
+                  className="btn-ghost"
+                  onClick={handleWithdraw}
+                  disabled={!canWithdraw}
+                  style={{ borderColor: "var(--coral)", color: "var(--coral)", fontSize: 11 }}
+                >
+                  {notReady ? "…" : "Withdraw"}
+                </button>
+              </div>
             </div>
           </>
         )}

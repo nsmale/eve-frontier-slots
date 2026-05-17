@@ -4,17 +4,23 @@ import { motion } from "framer-motion";
 import { useSlotStore } from "@/lib/store";
 
 interface Props {
-  onSpin: () => void;
+  onSpin:        () => void;
   chainPending?: boolean;
+  chainBalance?: number | null; // undefined = local mode, null = loading, number = loaded
 }
 
-export default function BetSummary({ onSpin, chainPending = false }: Props) {
-  const balance = useSlotStore((s) => s.balance);
-  const lines = useSlotStore((s) => s.lines);
+export default function BetSummary({ onSpin, chainPending = false, chainBalance }: Props) {
+  const localBalance   = useSlotStore((s) => s.balance);
+  const lines          = useSlotStore((s) => s.lines);
   const creditsPerLine = useSlotStore((s) => s.creditsPerLine);
-  const spinning = useSlotStore((s) => s.spinning);
-  const totalBet = lines * creditsPerLine;
-  const canSpin = balance >= totalBet && !spinning && !chainPending;
+  const spinning       = useSlotStore((s) => s.spinning);
+  const totalBet       = lines * creditsPerLine;
+
+  const onChain        = chainBalance !== undefined;
+  const effectiveBal   = onChain ? (chainBalance ?? 0) : localBalance;
+  const hasBalance     = effectiveBal >= totalBet;
+  // Button is only truly disabled while an action is in progress
+  const actionBusy     = spinning || chainPending;
 
   return (
     <div className="flex items-center justify-between gap-4">
@@ -29,7 +35,9 @@ export default function BetSummary({ onSpin, chainPending = false }: Props) {
             color: "var(--teal)",
             letterSpacing: "0.05em",
           }}>
-            {totalBet}<span className="hud-label" style={{ marginLeft: 5, fontSize: 9 }}>CR</span>
+            {totalBet}<span className="hud-label" style={{ marginLeft: 5, fontSize: 9 }}>
+              {onChain ? "FUEL" : "CR"}
+            </span>
           </p>
         </div>
         <div style={{ borderLeft: "1px solid rgba(24,124,155,0.2)", paddingLeft: 16 }}>
@@ -44,16 +52,17 @@ export default function BetSummary({ onSpin, chainPending = false }: Props) {
         </div>
       </div>
 
-      {/* Spin button */}
+      {/* Spin button — clickable even when balance is low so user gets feedback */}
       <motion.button
-        whileTap={{ scale: canSpin ? 0.97 : 1 }}
+        whileTap={{ scale: actionBusy ? 1 : 0.97 }}
         onClick={onSpin}
-        disabled={!canSpin}
+        disabled={actionBusy}
         className="btn-primary"
         style={{
           minWidth: 160,
           position: "relative",
           overflow: "hidden",
+          opacity: !hasBalance && !actionBusy ? 0.5 : 1,
         }}
       >
         {chainPending ? (

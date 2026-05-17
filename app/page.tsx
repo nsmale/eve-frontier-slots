@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSmartObject } from "@evefrontier/dapp-kit";
 import { useWallet } from "@/lib/chain/WalletContext";
@@ -12,6 +12,7 @@ import LineSelector from "@/components/LineSelector";
 import CreditSelector from "@/components/CreditSelector";
 import BetSummary from "@/components/BetSummary";
 import Paytable from "@/components/Paytable";
+import { fetchPlayerFuelBalance } from "@/lib/chain/query";
 import GlobalStats from "@/components/GlobalStats";
 import JackpotDisplay from "@/components/JackpotDisplay";
 import { useSlotStore, initStore } from "@/lib/store";
@@ -19,6 +20,7 @@ import { buildSpinTransaction, parseSpinResult, gridFromEvent } from "@/lib/chai
 import { buildDepositTransaction, buildWithdrawTransaction } from "@/lib/chain/deposit";
 import { isChainConfigured, NETWORK } from "@/lib/chain/config";
 import { evaluate } from "@/lib/engine/evaluate";
+import { useQuery } from "@tanstack/react-query";
 
 const suiClient = new SuiClient({ network: NETWORK, url: getFullnodeUrl(NETWORK) });
 
@@ -49,12 +51,36 @@ export default function Home() {
   const lastResult = useSlotStore((s) => s.lastResult);
   const lines          = useSlotStore((s) => s.lines);
   const creditsPerLine = useSlotStore((s) => s.creditsPerLine);
+  const totalBet       = lines * creditsPerLine;
+
+  const localBalance   = useSlotStore((s) => s.balance);
 
   const { isConnected, walletAddress, character } = useWallet();
   const { assembly } = useSmartObject();
   const searchParams = useSearchParams();
   // Prefer the SSU the game passed via ?itemId= (resolved by dapp-kit) over ?ssu= fallback
   const ssuId = assembly?.id ?? searchParams.get("ssu") ?? "";
+
+  const useChainMode = isChainConfigured && isConnected;
+
+  // Mirror the fuel balance query (same cache key as PlayerHUD, no extra fetch)
+  const { data: chainFuelBalance } = useQuery({
+    queryKey: ["fuelBalance", character?.characterId],
+    queryFn:  () => fetchPlayerFuelBalance(character!.characterId),
+    enabled:  useChainMode && !!character,
+    staleTime: 10_000,
+  });
+
+  const effectiveBalance = useChainMode ? (chainFuelBalance ?? null) : localBalance;
+
+  // Insufficient-balance flip message (auto-dismiss after 3 s)
+  const [showInsufficientFuel, setShowInsufficientFuel] = useState(false);
+  const insufficientTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function triggerInsufficientFuel() {
+    if (insufficientTimer.current) clearTimeout(insufficientTimer.current);
+    setShowInsufficientFuel(true);
+    insufficientTimer.current = setTimeout(() => setShowInsufficientFuel(false), 3000);
+  }
 
   useEffect(() => { initStore(); }, []);
 
@@ -81,6 +107,12 @@ export default function Home() {
 
   const handleSpin = useCallback(async () => {
     if (spinning || chainPending) return;
+
+    // Reject and show message when balance is loaded but too low
+    if (effectiveBalance !== null && totalBet > effectiveBalance) {
+      triggerInsufficientFuel();
+      return;
+    }
 
     const useChain = isChainConfigured && !!ssuId && isConnected && !!walletAddress && !!character;
 
@@ -118,7 +150,7 @@ export default function Home() {
       executeSpin();
     }
   }, [spinning, chainPending, ssuId, isConnected, walletAddress, character, lines, creditsPerLine,
-      setChainPending, startChainSpin, executeSpin, invalidateFuelBalance]);
+      effectiveBalance, totalBet, setChainPending, startChainSpin, executeSpin, invalidateFuelBalance]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Deposit ─────────────────────────────────────────────────────────────
 
@@ -209,6 +241,7 @@ export default function Home() {
           activeLines={lines}
           lineWins={lastResult && !spinning ? lastResult.lineWins : []}
           winAmount={winAmount}
+          insufficientBalance={showInsufficientFuel}
           onSpinComplete={handleSpinComplete}
         />
 
@@ -230,7 +263,11 @@ export default function Home() {
 
           <div style={{ height: 1, background: "rgba(24,124,155,0.12)" }} />
 
-          <BetSummary onSpin={handleSpin} chainPending={chainPending} />
+          <BetSummary
+            onSpin={handleSpin}
+            chainPending={chainPending}
+            chainBalance={useChainMode ? (chainFuelBalance ?? null) : undefined}
+          />
 
           <div style={{ height: 1, background: "rgba(24,124,155,0.12)" }} />
 

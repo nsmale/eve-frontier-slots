@@ -1,7 +1,7 @@
 "use client";
 
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import type { SymbolId } from "@/lib/engine/symbols";
 import { SYMBOL_IDS, SYMBOL_ART } from "@/lib/engine/symbols";
@@ -28,6 +28,18 @@ function randomSym(): SymbolId {
   return ALL_SYMS[Math.floor(Math.random() * ALL_SYMS.length)];
 }
 
+/** Build the startup grid so every symbol appears at least once across 5×3 = 15 cells. */
+function makeInitialGrid(): Grid {
+  const all = [...SYMBOL_IDS] as SymbolId[];           // 10 symbols
+  const extra = Array.from({ length: 5 }, randomSym);  // 5 more random
+  const cells = [...all, ...extra] as SymbolId[];
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cells[i], cells[j]] = [cells[j], cells[i]];
+  }
+  return Array.from({ length: 5 }, (_, ri) => cells.slice(ri * 3, ri * 3 + 3) as SymbolId[]);
+}
+
 /* ─── Video mapping ─────────────────────────────────────────────────────── */
 const CHARACTER_ANCHORS: LineAnchor[] = ["M1", "M2", "M3"];
 const SHIP_ANCHORS:      LineAnchor[] = ["S1", "S2", "S3"];
@@ -45,19 +57,18 @@ function pickStingVideo(lineWins: LineWin[]): "human" | "ship" | "war" | null {
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 interface Props {
-  finalGrid:      Grid | null;
-  spinning:       boolean;
-  activeLines:    number;
-  lineWins:       LineWin[];
-  winAmount:      number;
-  onSpinComplete: () => void;
+  finalGrid:          Grid | null;
+  spinning:           boolean;
+  activeLines:        number;
+  lineWins:           LineWin[];
+  winAmount:          number;
+  insufficientBalance?: boolean;
+  onSpinComplete:     () => void;
 }
 
 /* ─── ReelGrid ──────────────────────────────────────────────────────────── */
-export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, winAmount, onSpinComplete }: Props) {
-  const [displayGrid, setDisplayGrid] = useState<Grid>(() =>
-    Array.from({ length: 5 }, () => ["S1", "S2", "S3"] as SymbolId[])
-  );
+export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, winAmount, insufficientBalance = false, onSpinComplete }: Props) {
+  const [displayGrid, setDisplayGrid] = useState<Grid>(makeInitialGrid);
   const [spinningReels, setSpinningReels] = useState<boolean[]>([false, false, false, false, false]);
   const [stingActive, setStingActive] = useState(false);
 
@@ -212,6 +223,45 @@ export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, w
               );
             })}
           </svg>
+
+            {/* Insufficient balance overlay */}
+          <AnimatePresence>
+            {insufficientBalance && (
+              <motion.div
+                key="no-funds"
+                initial={{ opacity: 0, rotateY: 90 }}
+                animate={{ opacity: 1, rotateY: 0 }}
+                exit={{ opacity: 0, rotateY: -90 }}
+                transition={{ duration: 0.3 }}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  zIndex: 25,
+                  background: "rgba(0,0,0,0.88)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  perspective: "600px",
+                }}
+              >
+                <motion.span
+                  animate={{ opacity: [1, 0.45, 1] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 15,
+                    fontWeight: 700,
+                    letterSpacing: "0.25em",
+                    textTransform: "uppercase",
+                    color: "var(--coral)",
+                    textShadow: "0 0 20px rgba(251,151,124,0.5)",
+                  }}
+                >
+                  DEPOSIT FUEL TO PLAY
+                </motion.span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Sting video overlay */}
           {stingActive && stingVideoSrc && (

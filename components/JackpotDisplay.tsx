@@ -31,22 +31,25 @@ export default function JackpotDisplay({ winAmount = 0, spinning = false }: Prop
   const showWinner = winAmount > 0 && !spinning;
 
   return (
+    /* Fixed height so the page doesn't shift when toggling between jackpots and winner */
+    <div style={{ height: 84, display: "flex", alignItems: "stretch" }}>
     <AnimatePresence mode="wait">
       {showWinner ? (
         /* ── Winner banner ─────────────────────────────────────────────── */
         <motion.div
           key="winner"
-          initial={{ opacity: 0, scale: 0.88, y: -8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.94 }}
           transition={{ type: "spring", stiffness: 360, damping: 22 }}
           style={{
+            flex: 1,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: 6,
-            padding: "18px 24px",
+            gap: 4,
+            padding: "0 24px",
             background: "rgba(229,53,53,0.08)",
             border: "1.5px solid rgba(229,53,53,0.5)",
             boxShadow: "0 0 40px rgba(229,53,53,0.2), inset 0 0 24px rgba(229,53,53,0.05)",
@@ -85,7 +88,7 @@ export default function JackpotDisplay({ winAmount = 0, spinning = false }: Prop
               transition={{ type: "spring", stiffness: 420, damping: 20, delay: 0.08 }}
               style={{
                 fontFamily: "var(--font-mono)",
-                fontSize: 44,
+                fontSize: 34,
                 fontWeight: 700,
                 letterSpacing: "0.04em",
                 color: "var(--red)",
@@ -112,7 +115,7 @@ export default function JackpotDisplay({ winAmount = 0, spinning = false }: Prop
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          style={{ display: "flex", gap: 12, justifyContent: "center", alignItems: "stretch" }}
+          style={{ flex: 1, display: "flex", gap: 12, justifyContent: "center", alignItems: "stretch" }}
         >
           {tiers.map(({ label, value, color, glow }) => (
             <div
@@ -168,5 +171,6 @@ export default function JackpotDisplay({ winAmount = 0, spinning = false }: Prop
         </motion.div>
       )}
     </AnimatePresence>
+    </div>
   );
 }
