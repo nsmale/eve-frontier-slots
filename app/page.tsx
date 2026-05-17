@@ -10,11 +10,9 @@ import ReelGrid from "@/components/ReelGrid";
 import LineSelector from "@/components/LineSelector";
 import CreditSelector from "@/components/CreditSelector";
 import BetSummary from "@/components/BetSummary";
-import WinDisplay from "@/components/WinDisplay";
 import Paytable from "@/components/Paytable";
 import GlobalStats from "@/components/GlobalStats";
 import JackpotDisplay from "@/components/JackpotDisplay";
-import DepositWithdrawPanel from "@/components/DepositWithdrawPanel";
 import { useSlotStore, initStore } from "@/lib/store";
 import { buildSpinTransaction, parseSpinResult, gridFromEvent } from "@/lib/chain/spin";
 import { buildDepositTransaction, buildWithdrawTransaction } from "@/lib/chain/deposit";
@@ -164,6 +162,8 @@ export default function Home() {
 
   const handleSpinComplete = useCallback(() => { setSpinning(false); }, [setSpinning]);
 
+  const winAmount = lastResult && !spinning ? lastResult.totalPayout : 0;
+
   return (
     <main
       style={{
@@ -174,9 +174,13 @@ export default function Home() {
         padding: "0 16px 32px",
       }}
     >
-      {/* ── Player HUD ─────────────────────────────────────────────── */}
+      {/* ── Player HUD (with inline deposit/withdraw) ───────────────── */}
       <div style={{ width: "100%", maxWidth: 610 }}>
-        <PlayerHUD />
+        <PlayerHUD
+          onDeposit={handleDeposit}
+          onWithdraw={handleWithdraw}
+          depositWithdrawDisabled={spinning || chainPending}
+        />
       </div>
 
       {/* ── Main content ───────────────────────────────────────────── */}
@@ -190,12 +194,10 @@ export default function Home() {
           gap: 0,
         }}
       >
-        {/* ── Jackpot Display ───────────────────────────────────────── */}
-        {isChainConfigured && (
-          <div style={{ marginBottom: 16 }}>
-            <JackpotDisplay />
-          </div>
-        )}
+        {/* ── Jackpot Display (becomes winner banner on win) ─────────── */}
+        <div style={{ marginBottom: 16 }}>
+          <JackpotDisplay winAmount={winAmount} spinning={spinning} />
+        </div>
 
         {/* ── Reel Grid ─────────────────────────────────────────────── */}
         <ReelGrid
@@ -203,7 +205,7 @@ export default function Home() {
           spinning={spinning}
           activeLines={lines}
           lineWins={lastResult && !spinning ? lastResult.lineWins : []}
-          winAmount={lastResult && !spinning ? lastResult.totalPayout : 0}
+          winAmount={winAmount}
           onSpinComplete={handleSpinComplete}
         />
 
@@ -229,22 +231,11 @@ export default function Home() {
 
           <div style={{ height: 1, background: "rgba(24,124,155,0.12)" }} />
 
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <WinDisplay
-              result={lastResult}
-              creditsPerLine={creditsPerLine}
-              spinning={spinning}
-            />
+          {/* Paytable button — position: relative so its panel overlays without shifting anything */}
+          <div className="flex justify-end">
             <Paytable />
           </div>
         </div>
-
-        {/* ── Deposit / Withdraw ────────────────────────────────────── */}
-        <DepositWithdrawPanel
-          onDeposit={handleDeposit}
-          onWithdraw={handleWithdraw}
-          disabled={spinning || chainPending}
-        />
 
         {/* ── Stats ─────────────────────────────────────────────────── */}
         <div style={{ marginTop: 20 }}>
