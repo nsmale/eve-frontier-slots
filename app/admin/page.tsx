@@ -41,7 +41,7 @@ export default function AdminPage() {
   const searchParams = useSearchParams();
 
   const [ssuId, setSsuId] = useState(searchParams.get("ssu") ?? "");
-  const [ssuOwnerCapId, setSsuOwnerCapId] = useState("");
+  const [ssuOwnerCapId, setSsuOwnerCapId] = useState(searchParams.get("cap") ?? "");
   const [fuelTypeId, setFuelTypeId] = useState("");
   const [steps, setSteps] = useState<StepStatus>({
     authorize: "idle",
