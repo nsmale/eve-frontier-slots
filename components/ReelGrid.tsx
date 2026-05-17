@@ -67,7 +67,7 @@ interface Props {
 }
 
 /* ─── ReelGrid ──────────────────────────────────────────────────────────── */
-export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, winAmount, insufficientBalance = false, onSpinComplete }: Props) {
+export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, insufficientBalance = false, onSpinComplete }: Props) {
   const [displayGrid, setDisplayGrid] = useState<Grid>(makeInitialGrid);
   const [spinningReels, setSpinningReels] = useState<boolean[]>([false, false, false, false, false]);
   const [stingActive, setStingActive] = useState(false);
@@ -117,6 +117,7 @@ export default function ReelGrid({ finalGrid, spinning, activeLines, lineWins, w
       refs.forEach((r) => {
         if (r.current) { r.current.pause(); r.current.currentTime = 0; }
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStingActive(false);
       return;
     }

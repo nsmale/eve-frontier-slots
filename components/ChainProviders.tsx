@@ -18,14 +18,19 @@ function WalletBridge({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isConnected || !walletAddress) {
+      // No wallet — clear async-fetched character cache
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCharacter(null);
       return;
     }
+    let cancelled = false;
+     
     setIsLoadingChar(true);
     fetchCharacterInfo(walletAddress)
-      .then(setCharacter)
-      .catch(() => setCharacter(null))
-      .finally(() => setIsLoadingChar(false));
+      .then((c) => { if (!cancelled) setCharacter(c); })
+      .catch(() => { if (!cancelled) setCharacter(null); })
+      .finally(() => { if (!cancelled) setIsLoadingChar(false); });
+    return () => { cancelled = true; };
   }, [isConnected, walletAddress]);
 
   const value: WalletState = {

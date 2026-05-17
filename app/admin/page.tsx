@@ -60,8 +60,16 @@ export default function AdminPage() {
 
   // Auto-discover SSUs owned by this character
   useEffect(() => {
-    if (!character) { setSsus([]); setSelectedSsu(null); return; }
+    if (!character) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSsus([]);
+       
+      setSelectedSsu(null);
+      return;
+    }
 
+    let cancelled = false;
+     
     setSsusLoading(true);
     const client = new SuiClient({ network: NETWORK, url: getFullnodeUrl(NETWORK) });
 
@@ -70,6 +78,7 @@ export default function AdminPage() {
       filter: { StructType: OWNER_CAP_TYPE },
       options: { showContent: true },
     }).then((result) => {
+      if (cancelled) return;
       const found: SsuOption[] = [];
       for (const obj of result.data) {
         const fields = (obj.data?.content as { fields?: { authorized_object_id?: string } } | undefined)?.fields;
@@ -80,10 +89,12 @@ export default function AdminPage() {
       }
       setSsus(found);
     }).catch(() => {
-      setSsus([]);
+      if (!cancelled) setSsus([]);
     }).finally(() => {
-      setSsusLoading(false);
+      if (!cancelled) setSsusLoading(false);
     });
+
+    return () => { cancelled = true; };
   }, [character?.characterId]);
 
   // Auto-select the SSU that matches the game context (assembly.id) or the only one
@@ -91,8 +102,10 @@ export default function AdminPage() {
     if (ssus.length === 0) return;
     if (activeAssemblyId) {
       const match = ssus.find((s) => s.ssuId === activeAssemblyId);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (match) { setSelectedSsu(match); return; }
     }
+     
     if (ssus.length === 1) setSelectedSsu(ssus[0]);
   }, [ssus, activeAssemblyId]);
 

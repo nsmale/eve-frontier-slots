@@ -174,7 +174,7 @@ export default function Home() {
       executeSpin();
     }
   }, [spinning, chainPending, ssuId, isConnected, walletAddress, character, lines, creditsPerLine,
-      effectiveBalance, totalBet, setChainPending, startChainSpin, executeSpin, invalidateFuelBalance]); // eslint-disable-line react-hooks/exhaustive-deps
+      effectiveBalance, totalBet, setChainPending, startChainSpin, executeSpin, invalidateFuelBalance]);  
 
   // ── Deposit ─────────────────────────────────────────────────────────────
 
