@@ -6,20 +6,21 @@ export const LINE_ANCHORS: LineAnchor[] = ["S1", "S2", "S3", "M1", "M2", "M3", "
 /**
  * Per-symbol line-pay multipliers × credits-per-line.
  * W only pays at 5-of-a-kind.
+ * Tuned for ~95% base-game RTP (lines + scatter, before jackpot reclaim).
  */
 const SYMBOL_LINE_PAY: Record<LineAnchor, Partial<Record<3 | 4 | 5, number>>> = {
-  S1: { 3: 3,   4: 12,   5: 45    },
-  S2: { 3: 7,   4: 30,   5: 100   },
-  S3: { 3: 15,  4: 75,   5: 250   },
-  M1: { 3: 20,  4: 100,  5: 400   },
-  M2: { 3: 50,  4: 250,  5: 1000  },
-  M3: { 3: 100, 4: 500,  5: 2000  },
-  H1: { 3: 250, 4: 1250, 5: 5000  },
-  W:  {                  5: 10000 },
+  S1: { 3: 1,   4: 3,    5: 9    },
+  S2: { 3: 2,   4: 7,    5: 22   },
+  S3: { 3: 3,   4: 16,   5: 55   },
+  M1: { 3: 5,   4: 24,   5: 90   },
+  M2: { 3: 11,  4: 55,   5: 220  },
+  M3: { 3: 22,  4: 110,  5: 440  },
+  H1: { 3: 55,  4: 275,  5: 1100 },
+  W:  {                  5: 2200 },
 };
 
-/** Scatter pays × total bet */
-export const SCATTER_PAY: Record<2 | 3 | 4 | 5, number> = { 2: 2, 3: 5, 4: 20, 5: 50 };
+/** Scatter pays × total bet. 2-scatter intentionally pays 0 (was a 30% RTP leak). */
+export const SCATTER_PAY: Record<2 | 3 | 4 | 5, number> = { 2: 0, 3: 1, 4: 3, 5: 10 };
 
 export function getLinePay(anchor: LineAnchor, count: 3 | 4 | 5): number {
   return SYMBOL_LINE_PAY[anchor][count] ?? 0;

@@ -479,15 +479,17 @@ fun all_scatter(cells: &vector<u8>): bool {
     true
 }
 
+// Paytable tuned for ~95% base-game RTP (lines + scatter, before jackpot reclaim).
+// Must stay in sync with lib/engine/paytable.ts.
 fun line_pay(anchor: u8, count: u8): u64 {
-    if      (anchor == 0) { if (count == 3) 3   else if (count == 4) 12   else 45    }
-    else if (anchor == 1) { if (count == 3) 7   else if (count == 4) 30   else 100   }
-    else if (anchor == 2) { if (count == 3) 15  else if (count == 4) 75   else 250   }
-    else if (anchor == 3) { if (count == 3) 20  else if (count == 4) 100  else 400   }
-    else if (anchor == 4) { if (count == 3) 50  else if (count == 4) 250  else 1000  }
-    else if (anchor == 5) { if (count == 3) 100 else if (count == 4) 500  else 2000  }
-    else if (anchor == 7) { if (count == 3) 250 else if (count == 4) 1250 else 5000  }
-    else if (anchor == 8) { if (count == 5) 10000 else 0 }
+    if      (anchor == 0) { if (count == 3) 1   else if (count == 4) 3    else 9    }   // S1
+    else if (anchor == 1) { if (count == 3) 2   else if (count == 4) 7    else 22   }   // S2
+    else if (anchor == 2) { if (count == 3) 3   else if (count == 4) 16   else 55   }   // S3
+    else if (anchor == 3) { if (count == 3) 5   else if (count == 4) 24   else 90   }   // M1
+    else if (anchor == 4) { if (count == 3) 11  else if (count == 4) 55   else 220  }   // M2
+    else if (anchor == 5) { if (count == 3) 22  else if (count == 4) 110  else 440  }   // M3
+    else if (anchor == 7) { if (count == 3) 55  else if (count == 4) 275  else 1100 }   // H1
+    else if (anchor == 8) { if (count == 5) 2200 else 0 }                                // W (5-only)
     else 0
 }
 
@@ -503,10 +505,10 @@ fun evaluate_scatter(grid: &vector<vector<u8>>, total_bet: u64): (u8, u64) {
         };
         r = r + 1;
     };
-    let mult: u64 = if      (count >= 5) 50
-                    else if (count == 4) 20
-                    else if (count == 3) 5
-                    else if (count == 2) 2
+    // Scatter pays × total bet. 2-scatter intentionally pays 0 (was a major RTP leak).
+    let mult: u64 = if      (count >= 5) 10
+                    else if (count == 4) 3
+                    else if (count == 3) 1
                     else                 0;
     (count, mult * total_bet)
 }
