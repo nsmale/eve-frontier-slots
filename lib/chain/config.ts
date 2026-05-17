@@ -36,10 +36,6 @@ export const SLOT_CONFIG_ID =
   process.env.NEXT_PUBLIC_SLOT_CONFIG_ID ??
   "0x13f73c11c973d87b7fe55033563452f05922a487bc172fcfc8bbefb5348ce8de";
 
-/** SmartStorageUnit object ID for this slot machine */
-export const SSU_ID =
-  process.env.NEXT_PUBLIC_SSU_ID ?? "";
-
 /**
  * In-game type_id for the fuel accepted by this machine.
  * Find type IDs via the World API: https://world-api-utopia.uat.pub.evefrontier.com/docs
@@ -55,7 +51,10 @@ export const SUI_RANDOM_ID = "0x8";
 
 // ── Feature flags ─────────────────────────────────────────────────────────────
 
-/** True once all contract IDs are set — enables on-chain mode */
+/**
+ * True once the contract IDs are configured. SSU_ID is NOT checked here —
+ * it comes from the ?ssu= URL param at runtime and is validated per-session.
+ */
 export const isChainConfigured = Boolean(
-  SLOT_PACKAGE_ID && SLOT_CONFIG_ID && SSU_ID && FUEL_TYPE_ID,
+  SLOT_PACKAGE_ID && SLOT_CONFIG_ID && FUEL_TYPE_ID,
 );

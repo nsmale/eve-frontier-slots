@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useWallet } from "@/lib/chain/WalletContext";
 import { queryClient } from "@/components/Providers";
 import { SuiJsonRpcClient as SuiClient, getJsonRpcFullnodeUrl as getFullnodeUrl } from "@mysten/sui/jsonRpc";
@@ -51,6 +52,8 @@ export default function Home() {
   const creditsPerLine = useSlotStore((s) => s.creditsPerLine);
 
   const { isConnected, walletAddress, character } = useWallet();
+  const searchParams = useSearchParams();
+  const ssuId = searchParams.get("ssu") ?? "";
 
   useEffect(() => { initStore(); }, []);
 
@@ -78,7 +81,7 @@ export default function Home() {
   const handleSpin = useCallback(async () => {
     if (spinning || chainPending) return;
 
-    const useChain = isChainConfigured && isConnected && !!walletAddress && !!character;
+    const useChain = isChainConfigured && !!ssuId && isConnected && !!walletAddress && !!character;
 
     if (useChain) {
       setChainPending(true);
@@ -113,7 +116,7 @@ export default function Home() {
     } else {
       executeSpin();
     }
-  }, [spinning, chainPending, isConnected, walletAddress, character, lines, creditsPerLine,
+  }, [spinning, chainPending, ssuId, isConnected, walletAddress, character, lines, creditsPerLine,
       setChainPending, startChainSpin, executeSpin, invalidateFuelBalance]);
 
   // ── Deposit ─────────────────────────────────────────────────────────────
@@ -124,6 +127,7 @@ export default function Home() {
       const tx = buildDepositTransaction({
         playerAddress: walletAddress,
         characterId:   character.characterId,
+        ssuId,
         ownerCapRef: {
           objectId: character.ownerCapId,
           version:  character.ownerCapVersion,
@@ -137,7 +141,7 @@ export default function Home() {
     } catch (err) {
       console.error("Deposit failed:", err);
     }
-  }, [character, walletAddress, invalidateFuelBalance]);
+  }, [character, walletAddress, ssuId, invalidateFuelBalance]);
 
   // ── Withdraw ────────────────────────────────────────────────────────────
 
@@ -147,6 +151,7 @@ export default function Home() {
       const tx = buildWithdrawTransaction({
         playerAddress: walletAddress,
         characterId:   character.characterId,
+        ssuId,
         quantity,
       });
       const dAppKit = await getDAppKit();
@@ -155,7 +160,7 @@ export default function Home() {
     } catch (err) {
       console.error("Withdraw failed:", err);
     }
-  }, [character, walletAddress, invalidateFuelBalance]);
+  }, [character, walletAddress, ssuId, invalidateFuelBalance]);
 
   const handleSpinComplete = useCallback(() => { setSpinning(false); }, [setSpinning]);
 
@@ -257,7 +262,7 @@ export default function Home() {
             textTransform: "uppercase",
           }}
         >
-          {isChainConfigured
+          {isChainConfigured && ssuId
             ? "Utopia Testnet · On-Chain · Powered by Sui"
             : "Session only · Balance resets on new session"}
         </p>

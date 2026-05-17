@@ -14,7 +14,6 @@ import {
   FUEL_TYPE_ID,
   SLOT_CONFIG_ID,
   SLOT_PACKAGE_ID,
-  SSU_ID,
   WORLD_PACKAGE_ID,
   WORLD_PACKAGE_CURRENT,
 } from "./config";
@@ -24,6 +23,7 @@ import {
 export interface BuildDepositTxArgs {
   playerAddress: string;
   characterId:   string;
+  ssuId:         string;
   /** Version and digest of the OwnerCap<Character> object (for Receiving<> arg). */
   ownerCapRef:   { objectId: string; version: string; digest: string };
   quantity:      number;  // fuel units
@@ -32,6 +32,7 @@ export interface BuildDepositTxArgs {
 export function buildDepositTransaction({
   playerAddress,
   characterId,
+  ssuId,
   ownerCapRef,
   quantity,
 }: BuildDepositTxArgs): Transaction {
@@ -56,7 +57,7 @@ export function buildDepositTransaction({
     target: `${WORLD_PACKAGE_CURRENT}::storage_unit::withdraw_by_owner`,
     typeArguments: [characterType],
     arguments: [
-      tx.object(SSU_ID),
+      tx.object(ssuId),
       tx.object(characterId),
       cap,
       tx.pure.u64(FUEL_TYPE_ID),
@@ -68,7 +69,7 @@ export function buildDepositTransaction({
   tx.moveCall({
     target: `${SLOT_PACKAGE_ID}::slots::accept_deposit`,
     arguments: [
-      tx.object(SSU_ID),
+      tx.object(ssuId),
       tx.object(characterId),
       tx.object(SLOT_CONFIG_ID),
       item,
@@ -94,12 +95,14 @@ export function buildDepositTransaction({
 export interface BuildWithdrawTxArgs {
   playerAddress: string;
   characterId:   string;
+  ssuId:         string;
   quantity:      number;  // fuel units
 }
 
 export function buildWithdrawTransaction({
   playerAddress,
   characterId,
+  ssuId,
   quantity,
 }: BuildWithdrawTxArgs): Transaction {
   const tx = new Transaction();
@@ -108,7 +111,7 @@ export function buildWithdrawTransaction({
   tx.moveCall({
     target: `${SLOT_PACKAGE_ID}::slots::withdraw_fuel`,
     arguments: [
-      tx.object(SSU_ID),
+      tx.object(ssuId),
       tx.object(characterId),
       tx.object(SLOT_CONFIG_ID),
       tx.pure.u64(quantity),

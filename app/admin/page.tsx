@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Transaction } from "@mysten/sui/transactions";
 import { useWallet } from "@/lib/chain/WalletContext";
 import {
@@ -8,15 +9,11 @@ import {
   WORLD_PACKAGE_CURRENT,
   SLOT_PACKAGE_ID,
   SLOT_CONFIG_ID,
-  SSU_ID,
 } from "@/lib/chain/config";
 
 // ── Known IDs for this deployment ────────────────────────────────────────────
 const ADMIN_CAP_ID =
   "0x82e434c9d0513fadbd96d21daee56da238743be7ec3b3b0752208f23382804d5";
-
-const SSU_OWNER_CAP_ID =
-  "0x13b157475210774481ea5066a18fb857cf3443921b44219cd0c46ebc414540f0";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function extractDigest(result: unknown): string {
@@ -41,7 +38,10 @@ interface StepStatus {
 // ── Admin page ────────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const { isConnected, walletAddress, character, handleConnect } = useWallet();
+  const searchParams = useSearchParams();
 
+  const [ssuId, setSsuId] = useState(searchParams.get("ssu") ?? "");
+  const [ssuOwnerCapId, setSsuOwnerCapId] = useState("");
   const [fuelTypeId, setFuelTypeId] = useState("");
   const [steps, setSteps] = useState<StepStatus>({
     authorize: "idle",
@@ -64,6 +64,8 @@ export default function AdminPage() {
   // ── Step 1: authorize_on_ssu ───────────────────────────────────────────────
   async function runAuthorize() {
     if (!character) return setError("No character found for this wallet.");
+    if (!ssuId) return setError("Enter the SSU object ID.");
+    if (!ssuOwnerCapId) return setError("Enter the OwnerCap<StorageUnit> object ID.");
 
     setStep("authorize", "pending");
     setError("");
@@ -78,7 +80,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           jsonrpc: "2.0", id: 1,
           method: "sui_getObject",
-          params: [SSU_OWNER_CAP_ID, { showVersion: true, showDigest: true }],
+          params: [ssuOwnerCapId, { showVersion: true, showDigest: true }],
         }),
       });
       const json = await res.json();
@@ -86,7 +88,7 @@ export default function AdminPage() {
       if (!obj) throw new Error("OwnerCap<StorageUnit> not found on chain");
 
       const ownerCapRef = {
-        objectId: SSU_OWNER_CAP_ID,
+        objectId: ssuOwnerCapId,
         version:  obj.version as string,
         digest:   obj.digest  as string,
       };
@@ -109,7 +111,7 @@ export default function AdminPage() {
       tx.moveCall({
         target: `${SLOT_PACKAGE_ID}::slots::authorize_on_ssu`,
         arguments: [
-          tx.object(SSU_ID),
+          tx.object(ssuId),
           ssuOwnerCap,
         ],
       });
@@ -219,13 +221,31 @@ export default function AdminPage() {
           Registers the slots package as an authorized extension on your SSU.
           Must be signed by the character owner wallet.
         </p>
-        <div className="text-xs text-gray-600 mb-3 space-y-1">
-          <p>SSU: {SSU_ID}</p>
-          <p>OwnerCap: {SSU_OWNER_CAP_ID}</p>
+        <div className="space-y-2 mb-3">
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">SSU Object ID</label>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={ssuId}
+              onChange={(e) => setSsuId(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm font-mono focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">OwnerCap&lt;StorageUnit&gt; Object ID</label>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={ssuOwnerCapId}
+              onChange={(e) => setSsuOwnerCapId(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-sm font-mono focus:outline-none focus:border-cyan-500"
+            />
+          </div>
         </div>
         <button
           onClick={runAuthorize}
-          disabled={!isConnected || !character || steps.authorize === "pending" || steps.authorize === "success"}
+          disabled={!isConnected || !character || !ssuId || !ssuOwnerCapId || steps.authorize === "pending" || steps.authorize === "success"}
           className="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm font-bold"
         >
           {steps.authorize === "pending" ? "Submitting..." : "Authorize on SSU"}
